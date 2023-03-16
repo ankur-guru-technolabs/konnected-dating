@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\AuthController;
 
 Route::post('register', [AuthController::class, 'register'])->name('register');
 Route::post('login', [AuthController::class, 'login'])->name('login');
+Route::post('send_otp', [AuthController::class, 'sendOtp'])->name('send-otp');
  
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
