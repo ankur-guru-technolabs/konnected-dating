@@ -19,8 +19,8 @@ use App\Models\Temp;
 use App\Models\User;
 use App\Models\UserIceBreaker;
 use App\Models\UserPhoto;
-use Exception;
 use Illuminate\Http\Request;
+use Exception;
 use Helper;
 use Validator;
 
@@ -96,6 +96,12 @@ class AuthController extends BaseController
     // VERIFY OTP (IF USER EXISTS AND OTP VERIFIED THEN IT IS USED AS A LOGIN) 
 
     public function verifyOtp(Request $request){
+        // $user = User::where('email', '=', $request->email_or_phone)
+        // ->orWhere('phone_no','=', $request->email_or_phone)
+        // ->select('id','email', 'phone_no')
+        // ->first();
+        // $data['token'] = $user->createToken('Auth token')->accessToken;
+        // return $data;
         try{
             $validateData = Validator::make($request->all(), [
                 'email_or_phone' => 'required',
@@ -248,8 +254,9 @@ class AuthController extends BaseController
                         UserPhoto::create($user_photo_data);
                     }
                 }
+                return $this->success($user_data,'You are successfully registered');
             }
-            return $this->success($user_data,'You are successfully registered');
+            return $this->error('Something went wrong','Something went wrong');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
         }

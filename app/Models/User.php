@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
+use App\Models\UserIceBreaker;
 
 class User extends Authenticatable
 {
@@ -65,4 +66,16 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+    
+    // RELATIONSHIPS
+
+    public function iceBreakers()
+    {
+        return $this->hasMany(UserIceBreaker::class);
+    }
+
+    public function photos()
+    {
+        return $this->hasMany(UserPhoto::class);
+    }
 }

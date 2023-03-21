@@ -14,4 +14,13 @@ class UserPhoto extends Model
         'name',
         'type',
     ];
+
+    protected $appends = ['profile_photo'];
+
+    // ACCESSOR
+
+    public function getProfilePhotoAttribute()
+    {
+        return asset('/user_profile/' . $this->name);
+    }
 }

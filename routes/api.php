@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CustomerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,6 +28,8 @@ Route::get('get-registration-form-data', [AuthController::class, 'getRegistratio
 Route::post('register', [AuthController::class, 'register'])->name('register');
 Route::post('email-exist', [AuthController::class, 'emailExist'])->name('email-exist');
  
-Route::middleware('auth:api')->get('/get-user-profile', function (Request $request) {
-    return $request->user();
+Route::middleware('auth:api')->group(function () {
+    Route::get('get-user-profile', [CustomerController::class,'getProfile'])->name('get-user-profile');
+    Route::post('update-user-profile', [CustomerController::class,'updateProfile'])->name('update-user-profile');
+    Route::get('log-out', [CustomerController::class,'logout'])->name('log-out');
 });
