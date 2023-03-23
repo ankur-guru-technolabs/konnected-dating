@@ -1,5 +1,3 @@
-
-text/x-generic email_verify.blade.php ( HTML document, ASCII text, with CRLF line terminators )
 <!doctype html>
 <html>
   <head>

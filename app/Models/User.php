@@ -42,6 +42,7 @@ class User extends Authenticatable
         'faith',
         'ethnticity',
         'hobbies',
+        'status',
         'email_verified',
         'phone_verified',
         'otp_verified',

@@ -30,7 +30,7 @@ class AuthController extends BaseController
 
     public function sendOtp(Request $request){
         try{
-
+            
             $otp    = substr(number_format(time() * rand(),0,'',''),0,4);
             $data   = [];
             $data['is_user_exist'] = 0;
@@ -119,21 +119,44 @@ class AuthController extends BaseController
 
                     $is_data_present->delete();
                     $data = [];
+                    $data['user_id'] = 0;
                     $data['is_user_exist'] = 0;
+                    $data['is_email_verified'] = 0;
                     $data['otp'] = $request->otp;
+
+                    if(isset($request->id)){
+                        $user = User::where('id','=', $request->id)
+                        ->select('id','email', 'phone_no','email_verified')
+                        ->first();
+                        if ($user && filter_var($request->email_or_phone, FILTER_VALIDATE_EMAIL)) {
+                            $user->update(['email'=> $request->email_or_phone]);
+                        }
+                    }
 
                     $user = User::where('email', '=', $request->email_or_phone)
                             ->orWhere('phone_no','=', $request->email_or_phone)
-                            ->select('id','email', 'phone_no')
+                            ->select('id','email', 'phone_no','email_verified')
                             ->first();
 
                     if ($user) {
                         $data['is_user_exist'] = 1;
+                        $data['user_id'] = $user->id;
+                        $data['email'] = $user->email;
+                        
                         if ($user->email === $request->email_or_phone) {
                             $user->email_verified = 1;
                         }
                         $user->otp_verified = 1;
                         $user->save();
+                        
+                        // If user is exists and email not verifiy then show email send otp screen
+                        $data['is_email_verified'] = $user->email_verified;
+
+                        if($user->email_verified == 0){
+                            $request1 = new Request();
+                            $request1->merge(['email' => $user->email]);
+                            $this->sendOtp($request1);
+                        }
 
                         if($user->email_verified == 1 && $user->phone_verified = 1 && $user->otp_verified == 1){
                             $data['token'] = $user->createToken('Auth token')->accessToken;
