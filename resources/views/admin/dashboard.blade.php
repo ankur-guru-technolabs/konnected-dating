@@ -11,7 +11,7 @@
                     </div>
                     <div class="text-end pt-1">
                         <p class="text-sm mb-0 text-capitalize">Total Users</p>
-                        <h4 class="mb-0">2,300</h4>
+                        <h4 class="mb-0">{{$total_user_count}}</h4>
                     </div>
                 </div>
                 <div class="card-footer p-1">
@@ -26,7 +26,7 @@
                     </div>
                     <div class="text-end pt-1">
                         <p class="text-sm mb-0 text-capitalize">Today Users</p>
-                        <h4 class="mb-0">2,300</h4>
+                        <h4 class="mb-0">{{$today_user_count}}</h4>
                     </div>
                 </div>
                 <div class="card-footer p-1">
