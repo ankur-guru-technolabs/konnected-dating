@@ -17,7 +17,7 @@
                     </a>
                     <ul class="dropdown-menu  dropdown-menu-end ps-3 me-sm-n4" aria-labelledby="dropdownMenuButton">
                         <li class="nav-item">
-                            <a class="nav-link" href="{{route('users.list')}}">
+                            <a class="nav-link" href="{{ route('logout') }}" onclick="event.preventDefault();  document.getElementById('logout-form').submit();">
                                 <i class="fa fa-user me-sm-1"></i>
                                 <span class="d-sm-inline d-none">Sign Out</span>
                             </a>
@@ -25,6 +25,9 @@
                     </ul>
                 </li>
             </ul>
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                @csrf
+            </form>
         </div>
     </div>
 </nav>
