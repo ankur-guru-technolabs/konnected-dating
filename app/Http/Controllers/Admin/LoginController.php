@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
+use Session;
 
 class LoginController extends Controller
 {
@@ -22,7 +22,11 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
+        $remember_me = $request->has('remember_me');
         if (Auth::attempt($credentials)) {
+            $lifetime = $remember_me ? 20160 : 60;
+            Session::put('session_start_time', time());
+            Session::put('session_lifetime', $lifetime);
             return redirect("dashboard");
         }
 
