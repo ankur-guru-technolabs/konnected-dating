@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use Illuminate\Support\Facades\File;
 use App\Http\Controllers\BaseController;
+use App\Http\Controllers\API\AuthController;
 use App\Models\User;
 use App\Models\UserIceBreaker;
 use App\Models\UserPhoto;
@@ -82,13 +83,13 @@ class CustomerController extends BaseController
 
             if($user_data){
                 if($user_data->email != $request->email){
-                    $user_data->email_verified = 0;
-                    $user_data->otp_verified = 0;
-                    $user_data->save();
-                    $this->sendOtp($request);
+                    // $user_data->email_verified = 0;
+                    // $user_data->otp_verified = 0;
+                    // $user_data->save();
+                    (new AuthController)->sendOtp($request);
                 }
 
-                $user_data->update($request->except(['phone_no']));
+                $user_data->update($request->except(['phone_no','email']));
 
                 // Check ice_breaker id which is present in old data but not in new 
 
@@ -145,6 +146,11 @@ class CustomerController extends BaseController
                         $user_photo_data['name'] = $filename;
                         UserPhoto::create($user_photo_data);
                     }
+                }
+
+                $user_data->new_email = null;
+                if($user_data->email != $request->email){
+                    $user_data->new_email = $request->email;
                 }
                 return $this->success($user_data,'You profile successfully updated');
             }

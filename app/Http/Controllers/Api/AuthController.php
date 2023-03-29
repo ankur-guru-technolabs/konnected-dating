@@ -124,6 +124,8 @@ class AuthController extends BaseController
                     $data['is_email_verified'] = 0;
                     $data['otp'] = $request->otp;
 
+
+                    // When user update email and come to verify screen at that time it is required to send id
                     if(isset($request->id)){
                         $user = User::where('id','=', $request->id)
                         ->select('id','email', 'phone_no','email_verified')
@@ -158,7 +160,7 @@ class AuthController extends BaseController
                             $this->sendOtp($request1);
                         }
 
-                        if($user->email_verified == 1 && $user->phone_verified = 1 && $user->otp_verified == 1){
+                        if($user->email_verified == 1 && $user->phone_verified = 1 && $user->otp_verified == 1 && !isset($request->id)){
                             $data['token'] = $user->createToken('Auth token')->accessToken;
                         }
                     } 

@@ -27,7 +27,7 @@ class AdminSeeder extends Seeder
             'job'=>'admin',
             'bio'=> 'I am admin',
             'company' =>'Guru',
-            'gender' =>'Male',
+            'gender' => 1,
             'age' => 9,
             'height'=> 20,
 	        'education'=> 3,
