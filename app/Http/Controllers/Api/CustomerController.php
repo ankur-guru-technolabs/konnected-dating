@@ -113,16 +113,18 @@ class CustomerController extends BaseController
                     $user_old_photo_name = UserPhoto::whereIn('id', $request->image)->where('user_id',$request->user_id)->pluck('name')->toArray();
 
                     $deletedFiles = [];
-                    foreach ($user_old_photo_name as $name) {
-                        $path = public_path('user_profile/' . $name);
-                        if (File::exists($path)) {
-                            if (!is_writable($path)) {
-                                chmod($path, 0777);
+                    if(!empty($user_old_photo_name)){
+                        foreach ($user_old_photo_name as $name) {
+                            $path = public_path('user_profile/' . $name);
+                            if (File::exists($path)) {
+                                if (!is_writable($path)) {
+                                    chmod($path, 0777);
+                                }
+                                File::delete($path);
+                                $deletedFiles[] = $path;
                             }
-                            File::delete($path);
-                            $deletedFiles[] = $path;
-                        }
-                    };
+                        };
+                    }
                     UserPhoto::whereIn('id', $request->image)->where('user_id',$request->user_id)->delete();
 
                     $photos = $request->file('photos');

@@ -145,13 +145,14 @@ class AuthController extends BaseController
                         $data['user_id'] = $user->id;
                         $data['email'] = $user->email;
                         
-                        if ($user->email === $request->email_or_phone) {
+                        if ($user->email == $request->email_or_phone) {
                             $user->email_verified = 1;
                         }
                         $user->otp_verified = 1;
                         $user->save();
                         
-                        // If user is exists and email not verifiy then show email send otp screen
+                        // When user register and from the page where otp verifiy for email kill app and then try to do login so need to send email and verified 0.
+                        // If user is exists and email not verifiy then show email send otp screens
                         $data['is_email_verified'] = $user->email_verified;
 
                         if($user->email_verified == 0){
@@ -234,7 +235,7 @@ class AuthController extends BaseController
                 'faith'      => 'required',
                 'ethnticity' => 'required',
                 'hobbies'    => 'required',
-                'photos'     => 'required',
+                'photos'     => 'required|array|min:4',
                 'photos.*'   => 'required|file|mimes:jpeg,png,jpg,mp4,mov,avi|max:10240',
                 'ice_breaker'=> 'required|array|min:3',
                 'ice_breaker.*.ice_breaker_id' => 'required',
