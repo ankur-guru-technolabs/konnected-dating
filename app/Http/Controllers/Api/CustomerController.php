@@ -5,14 +5,29 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Support\Facades\File;
 use App\Http\Controllers\BaseController;
 use App\Http\Controllers\API\AuthController;
+use App\Models\Age;
+use App\Models\Bodytype;
+use App\Models\Children;
+use App\Models\Education;
+use App\Models\Ethnicity;
+use App\Models\Faith;
+use App\Models\Gender;
+use App\Models\Height;
+use App\Models\Hobby;
+use App\Models\Industry;
+use App\Models\Icebreaker;
+use App\Models\Question;
+use App\Models\Salary; 
 use App\Models\User;
 use App\Models\UserIceBreaker;
 use App\Models\UserPhoto;
+use App\Models\UserQuestion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Exception;
 use Helper;
 use Validator;
+use DB;
 
 class CustomerController extends BaseController
 {
@@ -22,11 +37,59 @@ class CustomerController extends BaseController
 
     public function getProfile(){
         try{
-            $data['user']   =  User::with('iceBreakers', 'photos')->find(Auth::id());
+
+            $answeredIceBreakerIds = DB::table('user_ice_breakers')
+                            ->where('user_id', Auth::id())
+                            ->pluck('ice_breaker_id');
+
+            $iceBreakers = DB::table('icebreakers')
+                 ->whereNotIn('id', $answeredIceBreakerIds)
+                ->select('id', 'question')
+                ->get();
+
+            foreach ($iceBreakers as $iceBreaker) {
+                $iceBreaker->user_id = Auth::id();
+                $iceBreaker->ice_breaker_id = $iceBreaker->id;
+                $iceBreaker->answer =  null;
+                $iceBreaker->question =  $iceBreaker->question;
+            }
+ 
+            $data['user'] = User::with(['iceBreakers' => function ($query) {
+                $query->leftJoin('icebreakers', 'icebreakers.id', '=', 'user_ice_breakers.ice_breaker_id')
+                      ->select('user_ice_breakers.id', 'icebreakers.question','user_ice_breakers.user_id', 'user_ice_breakers.ice_breaker_id', 'user_ice_breakers.answer', );
+            }, 'photos', 'userQuestions' => function ($query) {
+                $query->leftJoin('questions', 'questions.id', '=', 'user_questions.question_id')
+                      ->leftJoin('sub_questions', 'sub_questions.id', '=', 'user_questions.answer_id')
+                      ->select('user_questions.id', 'user_questions.user_id', 'user_questions.question_id', 'user_questions.answer_id as selected_answer_id', 'questions.question', 'sub_questions.option');
+            }])->find(Auth::id());
+            
+            if(!empty($data['user']) && !empty($data['user']['iceBreakers'])){
+                $data['user']['ice_breakers_new'] = $data['user']['iceBreakers']->concat($iceBreakers);
+            }
 
             $data['user']->photos->map(function ($photo) {
                 $photo->append('profile_photo');
             });
+           
+            $hobbies_id                     = $data['user']['hobbies'];
+            $hobbyNames                     = Hobby::whereRaw("FIND_IN_SET(id, '$hobbies_id') > 0")->pluck('name');
+           
+            $ethnticity_id                  = $data['user']['ethnticity'];
+            $ethnticityNames                = Ethnicity::whereRaw("FIND_IN_SET(id, '$ethnticity_id') > 0")->pluck('name');
+
+        
+            $data['user']['age_new']        = Age::where('id',$data['user']['age'])->pluck('year')->first();
+            $data['user']['body_type_new']  = Bodytype::where('id',$data['user']['body_type'])->pluck('name')->first();
+            $data['user']['children_new']   = Children::where('id',$data['user']['children'])->pluck('children')->first();
+            $data['user']['education_new']  = Education::where('id',$data['user']['education'])->pluck('name')->first();
+            $data['user']['ethnticity_new'] = implode(", ", $ethnticityNames->toArray());
+            $data['user']['faith_new']      = Faith::where('id',$data['user']['faith'])->pluck('name')->first();
+            $data['user']['gender_new']     = Gender::where('id',$data['user']['gender'])->pluck('gender')->first();
+            $data['user']['height_new']     = Height::where('id',$data['user']['height'])->pluck('height')->first();
+            $data['user']['hobbies_new']    = implode(", ", $hobbyNames->toArray());
+            $data['user']['industry_new']   = Industry::where('id',$data['user']['industry'])->pluck('name')->first();
+            $data['user']['salary_new']     = Salary::where('id',$data['user']['salary'])->pluck('range')->first();
+
             return $this->success($data,'User profile data');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
@@ -44,6 +107,10 @@ class CustomerController extends BaseController
                 'ice_breaker.min' => 'Ice breakers must have at least :min items',
                 'ice_breaker.*.ice_breaker_id.required' => 'Ice breaker ID is required',
                 'ice_breaker.*.answer.required' => 'Answer is required',
+                'questions.required' => 'Questions are required',
+                'questions.array' => 'Questions must be an array',
+                'questions.*.question_id.required' => 'Question ID is required',
+                'questions.*.answer_id.required' => 'Answer is required',
             ];
             $validateData = Validator::make($request->all(), [
                 'user_id'    => 'required',
@@ -73,6 +140,9 @@ class CustomerController extends BaseController
                 'ice_breaker'=> 'required|array|min:3',
                 'ice_breaker.*.ice_breaker_id' => 'required',
                 'ice_breaker.*.answer' => 'required',
+                'questions'   => 'required|array',
+                'questions.*.question_id' => 'required',
+                'questions.*.answer_id' => 'required',
             ], $messages);
 
             if ($validateData->fails()) {
@@ -105,6 +175,13 @@ class CustomerController extends BaseController
                     }else{
                         $ice_breaker_data['user_id'] = $user_data->id;
                         UserIceBreaker::create($ice_breaker_data);
+                    }
+                }
+
+                foreach($request['questions'] as $question){
+                    $user_question_data = UserQuestion::where('user_id',$request->user_id)->where('question_id', $question['question_id'])->first();
+                    if($user_question_data){
+                        $user_question_data->update(['answer_id'=> $question['answer_id']]);
                     }
                 }
 

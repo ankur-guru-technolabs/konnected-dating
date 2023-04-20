@@ -66,6 +66,17 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'age' => 'int',
+        "gender"=>'int',
+        "height"=>'int',
+        "education"=>'int',
+        "industry"=>'int',
+        "salary"=>'int',
+        "body_type"=>'int',
+        "children"=>'int', 
+        "faith"=>'int',
+        "ethnticity"=>'int',
+        "hobbies"=>'int',
     ];
     
     // RELATIONSHIPS
@@ -78,5 +89,10 @@ class User extends Authenticatable
     public function photos()
     {
         return $this->hasMany(UserPhoto::class);
+    }
+
+    public function userQuestions()
+    {
+        return $this->hasMany(UserQuestion::class);
     }
 }

@@ -14,11 +14,13 @@ use App\Models\Height;
 use App\Models\Hobby;
 use App\Models\Industry;
 use App\Models\Icebreaker;
+use App\Models\Question;
 use App\Models\Salary;
 use App\Models\Temp;
 use App\Models\User;
 use App\Models\UserIceBreaker;
 use App\Models\UserPhoto;
+use App\Models\UserQuestion;
 use Illuminate\Http\Request;
 use Exception;
 use Helper;
@@ -194,6 +196,7 @@ class AuthController extends BaseController
             $data['hobby']      = Hobby::all();
             $data['industry']   = Industry::all();
             $data['icebreaker'] = Icebreaker::all();
+            $data['question']   = Question::with('SubQuestions')->get();
             $data['salary']     = Salary::all();
             return $this->success($data,'Registration form data');
         }catch(Exception $e){
@@ -212,6 +215,11 @@ class AuthController extends BaseController
                 'ice_breaker.min' => 'Ice breakers must have at least :min items',
                 'ice_breaker.*.ice_breaker_id.required' => 'Ice breaker ID is required',
                 'ice_breaker.*.answer.required' => 'Answer is required',
+                'questions.required' => 'Questions are required',
+                'questions.array' => 'Questions must be an array',
+                'questions.min' => 'Questions must have at least :min items',
+                'questions.*.question_id.required' => 'Question ID is required',
+                'questions.*.answer_id.required' => 'Answer is required',
             ];
             $validateData = Validator::make($request->all(), [
                 'first_name' => 'required|string|max:255',
@@ -240,6 +248,9 @@ class AuthController extends BaseController
                 'ice_breaker'=> 'required|array|min:3',
                 'ice_breaker.*.ice_breaker_id' => 'required',
                 'ice_breaker.*.answer' => 'required',
+                'questions'   => 'required|array|min:8',
+                'questions.*.question_id' => 'required',
+                'questions.*.answer_id' => 'required',
             ], $messages);
 
             if ($validateData->fails()) {
@@ -257,6 +268,13 @@ class AuthController extends BaseController
                 foreach($input['ice_breaker'] as $ice_breaker_data){
                     $ice_breaker_data['user_id'] = $user_data->id;
                     UserIceBreaker::create($ice_breaker_data);
+                }
+                
+                foreach($input['questions'] as $question){
+                    $question['user_id']        = $user_data->id;
+                    $question['question_id']    = $question['question_id'];
+                    $question['answer_id']      = $question['answer_id'];
+                    UserQuestion::create($question);
                 }
 
                 if ($request->hasFile('photos')) {
