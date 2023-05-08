@@ -26,6 +26,8 @@ class User extends Authenticatable
         'location',
         'latitude',
         'longitude',
+        'live_latitude',
+        'live_longitude',
         'job',
         'bio',
         'company',
@@ -75,8 +77,6 @@ class User extends Authenticatable
         "body_type"=>'int',
         "children"=>'int', 
         "faith"=>'int',
-        "ethnticity"=>'int',
-        "hobbies"=>'int',
     ];
     
     // RELATIONSHIPS
