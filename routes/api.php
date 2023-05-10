@@ -29,7 +29,14 @@ Route::post('register', [AuthController::class, 'register'])->name('register');
 Route::post('email-exist', [AuthController::class, 'emailExist'])->name('email-exist');
  
 Route::middleware('auth:api')->group(function () {
-    Route::get('get-user-profile', [CustomerController::class,'getProfile'])->name('get-user-profile');
+    Route::get('get-user-profile/{id}', [CustomerController::class,'getProfile'])->name('get-user-profile');
     Route::post('update-user-profile', [CustomerController::class,'updateProfile'])->name('update-user-profile');
+    Route::post('swipe-profile', [CustomerController::class,'swipeProfile'])->name('swipe-profile');
+    Route::post('discover-profile', [CustomerController::class,'discoverProfile'])->name('discover-profile');
+    Route::post('review-later', [CustomerController::class,'reviewLater'])->name('review-later');
+    Route::get('who-viewed-me', [CustomerController::class,'whoViewedMe'])->name('who-viewed-me');
+    Route::get('who-likes-me', [CustomerController::class,'whoLikesMe'])->name('who-likes-me');
+    Route::get('review-later-list', [CustomerController::class,'reviewLaterList'])->name('review-later-list');
+    Route::post('update-location', [CustomerController::class,'updateLocation'])->name('update-location');
     Route::get('log-out', [CustomerController::class,'logout'])->name('log-out');
 });

@@ -20,8 +20,11 @@ use App\Models\Question;
 use App\Models\Salary; 
 use App\Models\User;
 use App\Models\UserIceBreaker;
+use App\Models\UserLikes;
 use App\Models\UserPhoto;
 use App\Models\UserQuestion;
+use App\Models\UserReviewLater;
+use App\Models\UserView;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Exception;
@@ -35,11 +38,11 @@ class CustomerController extends BaseController
 
     // GET LOGGED IN USER PROFILE
 
-    public function getProfile(){
+    public function getProfile(Request $request){
         try{
 
             $answeredIceBreakerIds = DB::table('user_ice_breakers')
-                            ->where('user_id', Auth::id())
+                            ->where('user_id', $request->id)
                             ->pluck('ice_breaker_id');
 
             $iceBreakers = DB::table('icebreakers')
@@ -48,7 +51,7 @@ class CustomerController extends BaseController
                 ->get();
 
             foreach ($iceBreakers as $iceBreaker) {
-                $iceBreaker->user_id = Auth::id();
+                $iceBreaker->user_id = $request->id;
                 $iceBreaker->ice_breaker_id = $iceBreaker->id;
                 $iceBreaker->answer =  null;
                 $iceBreaker->question =  $iceBreaker->question;
@@ -61,7 +64,7 @@ class CustomerController extends BaseController
                 $query->leftJoin('questions', 'questions.id', '=', 'user_questions.question_id')
                       ->leftJoin('sub_questions', 'sub_questions.id', '=', 'user_questions.answer_id')
                       ->select('user_questions.id', 'user_questions.user_id', 'user_questions.question_id', 'user_questions.answer_id as selected_answer_id', 'questions.question', 'sub_questions.option');
-            }])->find(Auth::id());
+            }])->find($request->id);
             
             if(!empty($data['user']) && !empty($data['user']['iceBreakers'])){
                 $data['user']['ice_breakers_new'] = $data['user']['iceBreakers']->concat($iceBreakers);
@@ -71,11 +74,13 @@ class CustomerController extends BaseController
                 $photo->append('profile_photo');
             });
            
-            $hobbies_id                     = $data['user']['hobbies'];
-            $hobbyNames                     = Hobby::whereRaw("FIND_IN_SET(id, '$hobbies_id') > 0")->pluck('name');
-           
-            $ethnticity_id                  = $data['user']['ethnticity'];
-            $ethnticityNames                = Ethnicity::whereRaw("FIND_IN_SET(id, '$ethnticity_id') > 0")->pluck('name');
+            $hobbies_id                       = $data['user']['hobbies'];
+            $data['user']['hobbies_array']    = explode(",", $hobbies_id); 
+            $hobbyNames                       = Hobby::whereRaw("FIND_IN_SET(id, '$hobbies_id') > 0")->pluck('name');
+            
+            $ethnticity_id                    = $data['user']['ethnticity'];
+            $data['user']['ethnticity_array'] = explode(",", $hobbies_id); 
+            $ethnticityNames                  = Ethnicity::whereRaw("FIND_IN_SET(id, '$ethnticity_id') > 0")->pluck('name');
 
         
             $data['user']['age_new']        = Age::where('id',$data['user']['age'])->pluck('year')->first();
@@ -89,6 +94,17 @@ class CustomerController extends BaseController
             $data['user']['hobbies_new']    = implode(", ", $hobbyNames->toArray());
             $data['user']['industry_new']   = Industry::where('id',$data['user']['industry'])->pluck('name')->first();
             $data['user']['salary_new']     = Salary::where('id',$data['user']['salary'])->pluck('range')->first();
+
+            if($request->id != Auth::id()){
+                
+                // Check user is already liked and then after view profile ? in that scnario no data will inserted
+
+                $user_likes = UserLikes::where('like_from',Auth::id())->where('like_to',$request->id)->first();
+                $user_view = UserView::where('view_from',Auth::id())->where('view_to',$request->id)->first();
+                if(empty($user_likes) && empty($user_view)){
+                    UserView::create(['view_from'=>Auth::id(),'view_to'=> $request->id]);
+                };
+            }
 
             return $this->success($data,'User profile data');
         }catch(Exception $e){
@@ -240,6 +256,221 @@ class CustomerController extends BaseController
         return $this->error('Something went wrong','Something went wrong');
     }
 
+    // SWIPE PROFILE
+
+    public function swipeProfile(Request $request){ 
+        try{
+            $validateData = Validator::make($request->all(), [
+                'like_to' => 'required',
+                'status' => 'required',
+            ]);
+
+            if ($validateData->fails()) {
+                return $this->error($validateData->errors(),'Validation error',403);
+            }
+            $input              = $request->all();
+            $input['like_from'] = Auth::id();
+            $input['status']    = (strtolower($input['status']) == 'like') ? 1 : 0;
+            $input['match_id']  = 0;
+
+            // Check user already liked or disliked opposite user if yes then not insert else create
+            
+            $same_request = UserLikes::where('like_from',$input['like_from'])->where('like_to',$input['like_to'])->where('status',$input['status'])->exists();
+          
+            // Check opposite user is already liked or disliked if yes then set match_id,match_status,matched_at else set to default
+
+            $opposite_request = UserLikes::where('like_from',$input['like_to'])->where('like_to',$input['like_from'])->where('status',$input['status'])->exists();
+           
+            if($opposite_request && $input['status'] == 1){
+                $maxId = UserLikes::where('id', '>', 0)->max('id');
+             
+                $input['match_id']      = $maxId > 10000 ? $maxId + 1 : 10000;
+                $input['match_status']  = 1;
+                $input['matched_at']    = now();
+                
+                UserLikes::where('like_from',$input['like_to'])->where('like_to',$input['like_from'])->where('status',$input['status'])->update(
+                    ['match_id' => $input['match_id'],'match_status' => $input['match_status'],'matched_at' => $input['matched_at']]);
+            }
+
+            if(!$same_request){
+                // Check logged in user viewd opposite user profile and now liking that user profile then delete
+
+                if($input['status'] == 1){
+                    UserView::where('view_from',Auth::id())->where('view_to',$input['like_to'])->delete();
+                }
+
+                // Check logged in user viewd opposite user profile and now liking or disliking that user profile then delete
+                UserReviewLater::where('user_review_from',Auth::id())->where('user_review_to',$input['like_to'])->delete();
+                
+                // Check logged in user's profile viewd by opposite user profile and now logged in user liking or disliking that user profile then delete
+                
+                UserView::where('view_from',$input['like_to'])->where('view_to',Auth::id())->delete();
+                
+                UserLikes::create($input);
+            }
+
+            return $this->success([],'Profile liked successfully');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
+
+    // DISCOVER PROFILE
+
+    public function discoverProfile(Request $request){ 
+        try{
+            $validateData = Validator::make($request->all(), [
+                
+            ]);
+
+            if ($validateData->fails()) {
+                return $this->error($validateData->errors(),'Validation error',403);
+            }
+          
+            return $this->success($data,'Discovery list');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
+    // REVIEW LATER
+
+    public function reviewLater(Request $request){ 
+        try{
+            $validateData = Validator::make($request->all(), [
+                'user_id' => 'required', 
+            ]);
+
+            if ($validateData->fails()) {
+                return $this->error($validateData->errors(),'Validation error',403);
+            }
+            
+            $user_likes = UserLikes::where('like_from',Auth::id())->where('like_to',$request->id)->first();
+            $user_view = UserReviewLater::where('user_review_from',Auth::id())->where('user_review_to',$request->user_id)->first();
+            if(empty($user_likes) && empty($user_view)){
+                UserReviewLater::create(['user_review_from'=>Auth::id(),'user_review_to'=> $request->user_id]);
+            };
+           
+            return $this->success([],'Profile added to review later successfully');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
+    // WHO LIKES ME LISTING
+
+    public function whoLikesMe(){
+        try{
+            $data['user_likes_listing'] = UserLikes::with(['users:id,first_name,last_name,age', 'users.photos:id,user_id,name,type'])
+                                        ->where('user_likes.like_to',Auth::id())
+                                        ->where('user_likes.status',1)
+                                        ->select('user_likes.id', 'user_likes.like_from','user_likes.like_to')
+                                        ->get()
+                                        ->map(function ($user){
+                                            if($user->users->isNotEmpty()){
+                                                $profile_photo_media = $user->users->first()->photos->firstWhere('type', 'image');
+                                                $user->user_id = $user->users->first()->id;
+                                                $user->name = $user->users->first()->first_name.' '.$user->users->first()->last_name;
+                                                $user->profile_photo = $profile_photo_media->profile_photo;
+                                                unset($user->users);
+                                            }
+                                            return $user;
+                                        })->filter(function ($user){
+                                            return isset($user->user_id);
+                                        })
+                                        ->values();
+            return $this->success($data,'Who likes me listing');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
+    // WHO VIEWED ME LISTING
+
+    public function whoViewedMe(){
+        try{
+            $data['user_view_listing'] = UserView::with(['users:id,first_name,last_name,age', 'users.photos:id,user_id,name,type'])
+                                        ->where('user_views.view_to',Auth::id())
+                                        ->select('user_views.id', 'user_views.view_from','user_views.view_to')
+                                        ->get()
+                                        ->map(function ($user){
+                                            if($user->users->isNotEmpty()){
+                                                $profile_photo_media = $user->users->first()->photos->firstWhere('type', 'image');
+                                                $user->user_id = $user->users->first()->id;
+                                                $user->name = $user->users->first()->first_name.' '.$user->users->first()->last_name;
+                                                $user->profile_photo = $profile_photo_media->profile_photo;
+                                                unset($user->users);
+                                            }
+                                            return $user;
+                                        })->filter(function ($user){
+                                            return isset($user->user_id);
+                                        })
+                                        ->values();
+            return $this->success($data,'Who viewd me listing');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
+    // REVIEW LATER LISTING
+
+    public function reviewLaterList(){
+        try{
+            $data['user_review_later_listing'] = UserReviewLater::with(['users:id,first_name,last_name,age', 'users.photos:id,user_id,name,type'])
+                                                ->where('user_review_laters.user_review_from',Auth::id())
+                                                ->select('user_review_laters.id', 'user_review_laters.user_review_from','user_review_laters.user_review_to')
+                                                ->get()
+                                                ->map(function ($user){
+                                                    if($user->users->isNotEmpty()){
+                                                        $profile_photo_media = $user->users->first()->photos->firstWhere('type', 'image');
+                                                        $user->user_id = $user->users->first()->id;
+                                                        $user->name = $user->users->first()->first_name.' '.$user->users->first()->last_name;
+                                                        $user->profile_photo = $profile_photo_media->profile_photo;
+                                                        unset($user->users);
+                                                    }
+                                                    return $user;
+                                                })->filter(function ($user){
+                                                    return isset($user->user_id);
+                                                })
+                                                ->values();
+            return $this->success($data,'User review later me listing');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
+    // USER LIVE LOCATION UPDATE
+    
+    public function updateLocation(Request $request){
+        try{
+            $validateData = Validator::make($request->all(), [
+                'latitude'  => 'required',
+                'longitude' => 'required',
+            ]);
+
+            if ($validateData->fails()) {
+                return $this->error($validateData->errors(),'Validation error',403);
+            }
+
+            if (Auth::user()) {
+                $user_id   = Auth::user()->id;
+                $user_data = User::where('id',$user_id)->update(['live_latitude' =>  $request->latitude, 'live_longitude' => $request->longitude]);
+                return $this->success([],'Location updated successfullly');
+            }
+            return $this->error('Something went wrong','Something went wrong');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+    
     // USER LOGOUT
     public function logout(){
         try{

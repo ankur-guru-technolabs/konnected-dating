@@ -36,6 +36,7 @@ class AuthController extends BaseController
             $otp    = substr(number_format(time() * rand(),0,'',''),0,4);
             $data   = [];
             $data['is_user_exist'] = 0;
+            $data['otp'] = $otp;
             
             if(isset($request->email)){
                 $validateData = Validator::make($request->all(), [
@@ -198,6 +199,10 @@ class AuthController extends BaseController
             $data['icebreaker'] = Icebreaker::all();
             $data['question']   = Question::with('SubQuestions')->get();
             $data['salary']     = Salary::all();
+            $data['min_height'] = 6;
+            $data['max_height'] = 25;
+            $data['min_age']    = 1;
+            $data['max_age']    = 18;
             return $this->success($data,'Registration form data');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
