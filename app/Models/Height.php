@@ -12,4 +12,17 @@ class Height extends Model
     protected $fillable = [
         'height',
     ];
+
+    protected $appends = ['formatted_height'];
+
+    // ACCESSOR
+
+    public function getFormattedHeightAttribute()
+    {
+        $height = explode('.',$this->height);
+        if(isset($height[1])){
+            return $height[0]."'".$height[1];
+        }
+        return $height[0]."'0";
+    }
 }

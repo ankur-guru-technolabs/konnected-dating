@@ -12,4 +12,8 @@ class Age extends Model
     protected $fillable = [
         'year',
     ];
+    
+    protected $casts = [
+       'year'=> 'int', 
+    ];
 }

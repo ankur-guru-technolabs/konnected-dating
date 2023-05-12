@@ -77,6 +77,14 @@ class User extends Authenticatable
         "body_type"=>'int',
         "children"=>'int', 
         "faith"=>'int',
+        'latitude'=>'float',
+        'longitude'=>'float',
+        'live_latitude'=>'float',
+        'live_longitude'=>'float',
+        'status'=> 'int',
+        'email_verified' => 'int',
+        'phone_verified'=> 'int',
+        'otp_verified'=> 'int', 
     ];
     
     // RELATIONSHIPS

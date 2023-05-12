@@ -31,6 +31,7 @@ use Exception;
 use Helper;
 use Validator;
 use DB;
+use Laravel\Ui\Presets\React;
 
 class CustomerController extends BaseController
 {
@@ -75,11 +76,13 @@ class CustomerController extends BaseController
             });
            
             $hobbies_id                       = $data['user']['hobbies'];
-            $data['user']['hobbies_array']    = explode(",", $hobbies_id); 
+            $hobbies_array                    = explode(",", $hobbies_id); 
+            $data['user']['hobbies_array']    = array_map('intval', $hobbies_array);
             $hobbyNames                       = Hobby::whereRaw("FIND_IN_SET(id, '$hobbies_id') > 0")->pluck('name');
             
             $ethnticity_id                    = $data['user']['ethnticity'];
-            $data['user']['ethnticity_array'] = explode(",", $hobbies_id); 
+            $ethnticity_array                 = explode(",", $hobbies_id); 
+            $data['user']['ethnticity_array'] = array_map('intval', $ethnticity_array);
             $ethnticityNames                  = Ethnicity::whereRaw("FIND_IN_SET(id, '$ethnticity_id') > 0")->pluck('name');
 
         
@@ -94,7 +97,8 @@ class CustomerController extends BaseController
             $data['user']['hobbies_new']    = implode(", ", $hobbyNames->toArray());
             $data['user']['industry_new']   = Industry::where('id',$data['user']['industry'])->pluck('name')->first();
             $data['user']['salary_new']     = Salary::where('id',$data['user']['salary'])->pluck('range')->first();
-
+            $data['user']['formatted_height']= Height::find($data['user']['height'])->formatted_height;
+            
             if($request->id != Auth::id()){
                 
                 // Check user is already liked and then after view profile ? in that scnario no data will inserted
@@ -322,13 +326,99 @@ class CustomerController extends BaseController
     public function discoverProfile(Request $request){ 
         try{
             $validateData = Validator::make($request->all(), [
-                
+                'gender' => 'required',
+                'min_age' => 'required',
+                'max_age' => 'required|gte:min_age',
+                'min_height' => 'required',
+                'max_height' => 'required|gte:min_height',
             ]);
 
             if ($validateData->fails()) {
                 return $this->error($validateData->errors(),'Validation error',403);
             }
-          
+
+            $query = User::where('users.id', '!=', Auth::id())
+                            ->where('user_type', 'user')
+                            ->where('gender', $request->gender)
+                            ->whereRaw("CAST(age AS UNSIGNED) BETWEEN $request->min_age AND $request->max_age")
+                            ->whereRaw("CAST(height AS UNSIGNED) BETWEEN $request->min_height AND $request->max_height");
+
+                            if ($request->has('education')) {
+                                $query->where('education', $request->education);
+                            }
+
+                            if ($request->has('industry')) {
+                                $query->where('industry', $request->industry);
+                            }
+
+                            if ($request->has('salary')) {
+                                $query->where('salary', $request->salary);
+                            }
+
+                            if ($request->has('body_type')) {
+                                $query->where('body_type', $request->body_type);
+                            }
+
+                            if ($request->has('children')) {
+                                $query->where('children', $request->children);
+                            }
+                          
+                            if ($request->has('faith')) {
+                                $query->where('faith', $request->faith);
+                            }
+                            
+                            if ($request->has('hobbies')) {
+                                $query->where(function($query) use ($request) {
+                                    if($request->hobbies) {
+                                        $hobby_ids = explode(',', $request->hobbies);
+                                        foreach($hobby_ids as $id) {
+                                            $query->orWhereRaw("FIND_IN_SET($id, hobbies)");
+                                        }
+                                    }
+                                });
+                            }
+                          
+                            if ($request->has('ethnticity')) {
+                                $query->where(function($query) use ($request) {
+                                    if($request->ethnticity) {
+                                        $hobby_ids = explode(',', $request->ethnticity);
+                                        foreach($hobby_ids as $id) {
+                                            $query->orWhereRaw("FIND_IN_SET($id, ethnticity)");
+                                        }
+                                    }
+                                });
+                            }
+
+                            $query->leftJoin('user_likes as ul1', function ($join) {
+                                $join->on('users.id', '=', 'ul1.like_from')
+                                     ->where('ul1.like_to', '=', Auth::id());
+                            })->leftJoin('user_likes as ul2', function ($join) {
+                                $join->on('users.id', '=', 'ul2.like_to')
+                                     ->where('ul2.like_from', '=', Auth::id());
+                            })->leftJoin('user_review_laters as ur1', function ($join) {
+                                $join->on('users.id', '=', 'ur1.user_review_to')
+                                     ->where('ur1.user_review_from', '=', Auth::id());
+                            })->whereNull('ul1.id')->whereNull('ul2.id')->whereNull('ur1.id');
+                            
+            $user_list = $query->select('users.*')->paginate($request->input('perPage'), ['*'], 'page', $request->input('page'));
+
+            $data['user_list']  =   $user_list->map(function ($user){
+                                        $profile_photo_media = $user->photos->firstWhere('type', 'image');
+                                        $user->name = $user->first_name.' '.$user->last_name;
+                                        $user->profile_photo = $profile_photo_media->profile_photo;
+                                        unset($user->photos);
+                                        return $user;
+                                    });
+
+            $data['current_page'] = $user_list->currentPage();
+            $data['per_page']     = $user_list->perPage();
+            $data['total']        = $user_list->total();
+            $data['last_page']    = $user_list->lastPage();
+
+            // if (empty($data['user_list'][0])) {
+            //     $data['user_list'] = [];
+            // }
+
             return $this->success($data,'Discovery list');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
@@ -363,14 +453,16 @@ class CustomerController extends BaseController
 
     // WHO LIKES ME LISTING
 
-    public function whoLikesMe(){
+    public function whoLikesMe(Request $request){
         try{
-            $data['user_likes_listing'] = UserLikes::with(['users:id,first_name,last_name,age', 'users.photos:id,user_id,name,type'])
+            $user_likes_listing = UserLikes::with(['users:id,first_name,last_name,age', 'users.photos:id,user_id,name,type'])
                                         ->where('user_likes.like_to',Auth::id())
                                         ->where('user_likes.status',1)
+                                        ->where('user_likes.match_status',2)
                                         ->select('user_likes.id', 'user_likes.like_from','user_likes.like_to')
-                                        ->get()
-                                        ->map(function ($user){
+                                        ->paginate($request->input('perPage'), ['*'], 'page', $request->input('page'));
+                                        
+            $data['user_likes_listing'] = $user_likes_listing->map(function ($user){
                                             if($user->users->isNotEmpty()){
                                                 $profile_photo_media = $user->users->first()->photos->firstWhere('type', 'image');
                                                 $user->user_id = $user->users->first()->id;
@@ -383,6 +475,12 @@ class CustomerController extends BaseController
                                             return isset($user->user_id);
                                         })
                                         ->values();
+
+            $data['current_page'] = $user_likes_listing->currentPage();
+            $data['per_page']     = $user_likes_listing->perPage();
+            $data['total']        = $user_likes_listing->total();
+            $data['last_page']    = $user_likes_listing->lastPage();
+
             return $this->success($data,'Who likes me listing');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
@@ -392,13 +490,14 @@ class CustomerController extends BaseController
 
     // WHO VIEWED ME LISTING
 
-    public function whoViewedMe(){
+    public function whoViewedMe(Request $request){
         try{
-            $data['user_view_listing'] = UserView::with(['users:id,first_name,last_name,age', 'users.photos:id,user_id,name,type'])
+            $user_view_listing  = UserView::with(['users:id,first_name,last_name,age', 'users.photos:id,user_id,name,type'])
                                         ->where('user_views.view_to',Auth::id())
                                         ->select('user_views.id', 'user_views.view_from','user_views.view_to')
-                                        ->get()
-                                        ->map(function ($user){
+                                        ->paginate($request->input('perPage'), ['*'], 'page', $request->input('page'));
+                                        
+            $data['user_view_listing'] = $user_view_listing->map(function ($user){
                                             if($user->users->isNotEmpty()){
                                                 $profile_photo_media = $user->users->first()->photos->firstWhere('type', 'image');
                                                 $user->user_id = $user->users->first()->id;
@@ -411,6 +510,12 @@ class CustomerController extends BaseController
                                             return isset($user->user_id);
                                         })
                                         ->values();
+
+            $data['current_page'] = $user_view_listing->currentPage();
+            $data['per_page']     = $user_view_listing->perPage();
+            $data['total']        = $user_view_listing->total();
+            $data['last_page']    = $user_view_listing->lastPage();
+
             return $this->success($data,'Who viewd me listing');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
@@ -420,13 +525,14 @@ class CustomerController extends BaseController
 
     // REVIEW LATER LISTING
 
-    public function reviewLaterList(){
+    public function reviewLaterList(Request $request){
         try{
-            $data['user_review_later_listing'] = UserReviewLater::with(['users:id,first_name,last_name,age', 'users.photos:id,user_id,name,type'])
+            $user_review_later_listing = UserReviewLater::with(['users:id,first_name,last_name,age', 'users.photos:id,user_id,name,type'])
                                                 ->where('user_review_laters.user_review_from',Auth::id())
                                                 ->select('user_review_laters.id', 'user_review_laters.user_review_from','user_review_laters.user_review_to')
-                                                ->get()
-                                                ->map(function ($user){
+                                                ->paginate($request->input('perPage'), ['*'], 'page', $request->input('page'));
+
+            $data['user_review_later_listing'] = $user_review_later_listing->map(function ($user){
                                                     if($user->users->isNotEmpty()){
                                                         $profile_photo_media = $user->users->first()->photos->firstWhere('type', 'image');
                                                         $user->user_id = $user->users->first()->id;
@@ -439,6 +545,11 @@ class CustomerController extends BaseController
                                                     return isset($user->user_id);
                                                 })
                                                 ->values();
+                                                 
+            $data['current_page'] = $user_review_later_listing->currentPage();
+            $data['per_page']     = $user_review_later_listing->perPage();
+            $data['total']        = $user_review_later_listing->total();
+            $data['last_page']    = $user_review_later_listing->lastPage();
             return $this->success($data,'User review later me listing');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
