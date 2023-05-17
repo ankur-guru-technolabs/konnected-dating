@@ -157,12 +157,13 @@ class CustomerController extends BaseController
                 'hobbies'    => 'required',
                 'photos'     => 'sometimes|required',
                 'photos.*'   => 'sometimes|required|file|mimes:jpeg,png,jpg,mp4,mov,avi|max:10240',
-                'ice_breaker'=> 'required|array|min:3',
+                'thumbnail_image'              => 'sometimes|file|mimes:jpeg,png,jpg',
+                'ice_breaker'                  => 'required|array|min:3',
                 'ice_breaker.*.ice_breaker_id' => 'required',
-                'ice_breaker.*.answer' => 'required',
-                'questions'   => 'required|array',
-                'questions.*.question_id' => 'required',
-                'questions.*.answer_id' => 'required',
+                'ice_breaker.*.answer'         => 'required',
+                'questions'                    => 'required|array',
+                'questions.*.question_id'      => 'required',
+                'questions.*.answer_id'        => 'required',
             ], $messages);
 
             if ($validateData->fails()) {
@@ -204,10 +205,16 @@ class CustomerController extends BaseController
                         $user_question_data->update(['answer_id'=> $question['answer_id']]);
                     }
                 }
+                
+                $folderPath = public_path().'/user_profile';
+
+                if (!is_dir($folderPath)) {
+                    mkdir($folderPath, 0777, true);
+                }
 
                 if (isset($request->image) && $request->hasFile('photos')) {
 
-                    $user_old_photo_name = UserPhoto::whereIn('id', $request->image)->where('user_id',$request->user_id)->pluck('name')->toArray();
+                    $user_old_photo_name = UserPhoto::whereIn('id', $request->image)->where('user_id',$request->user_id)->where('type','!=','thumbnail_image')->pluck('name')->toArray();
 
                     $deletedFiles = [];
                     if(!empty($user_old_photo_name)){
@@ -222,14 +229,9 @@ class CustomerController extends BaseController
                             }
                         };
                     }
-                    UserPhoto::whereIn('id', $request->image)->where('user_id',$request->user_id)->delete();
+                    UserPhoto::whereIn('id', $request->image)->where('user_id',$request->user_id)->where('type','!=','thumbnail_image')->delete();
 
                     $photos = $request->file('photos');
-                    $folderPath = public_path().'/user_profile';
-
-                    if (!is_dir($folderPath)) {
-                        mkdir($folderPath, 0777, true);
-                    }
 
                     foreach ($photos as $photo) {
                         $extension  = $photo->getClientOriginalExtension();
@@ -245,6 +247,32 @@ class CustomerController extends BaseController
                         $user_photo_data['name'] = $filename;
                         UserPhoto::create($user_photo_data);
                     }
+                }
+
+                if ($request->hasFile('thumbnail_image')) {
+
+                    $user_old_thumbnail_name = UserPhoto::where('user_id',$request->user_id)->where('type','thumbnail_image')->pluck('name')->toArray();
+                    $path = public_path('user_profile/' . $user_old_thumbnail_name);
+                    if (File::exists($path)) {
+                        if (!is_writable($path)) {
+                            chmod($path, 0777);
+                        }
+                        File::delete($path);
+                    }
+
+                    UserPhoto::where('user_id',$request->user_id)->where('type','thumbnail_image')->delete();
+
+                    $thumbnail_image = $request->file('thumbnail_image');
+                    $extension  = $thumbnail_image->getClientOriginalExtension();
+                    $filename = 'User_'.$user_data->id.'_'.random_int(10000, 99999). '.' . $extension;
+                    $thumbnail_image->move(public_path('user_profile'), $filename);
+
+                    if ($extension == 'jpg' || $extension == 'jpeg' || $extension == 'png') {
+                        $user_photo_data['type'] = 'thumbnail_image';
+                    } 
+                    $user_photo_data['user_id'] = $user_data->id;
+                    $user_photo_data['name'] = $filename;
+                    UserPhoto::create($user_photo_data);
                 }
 
                 $user_data->new_email = null;
@@ -451,6 +479,36 @@ class CustomerController extends BaseController
         return $this->error('Something went wrong','Something went wrong');
     }
 
+    // UNDO
+
+    public function undoProfile (Request $request){
+        try{
+            $undo_profile_listing = [UserLikes::with(['usersLikesTo.photos:id,user_id,name,type'])
+                                            ->where('user_likes.like_from',Auth::id())
+                                            ->where('user_likes.match_status',2)
+                                            ->select('user_likes.id', 'user_likes.like_from','user_likes.like_to')
+                                            ->latest()
+                                            ->first()];
+
+            $data['undo_profile_listing'] = [];
+
+            if ($undo_profile_listing[0]) {
+                $data['undo_profile_listing']  =   collect($undo_profile_listing)->map(function ($user){
+                    $profile_photo_media = $user->usersLikesTo[0]->photos->firstWhere('type', 'image');
+                    $user->usersLikesTo[0]->name = $user->usersLikesTo[0]->first_name . ' ' . $user->usersLikesTo[0]->last_name;
+                    $user->usersLikesTo[0]->profile_photo = $profile_photo_media->profile_photo;
+                    unset($user->usersLikesTo[0]->photos);
+                    return $user;
+                });
+                UserLikes::where('user_likes.like_from',Auth::id())->where('user_likes.match_status',2)->latest()->first()->delete();
+            }
+            return $this->success($data,'Undo profile data');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+    
     // WHO LIKES ME LISTING
 
     public function whoLikesMe(Request $request){

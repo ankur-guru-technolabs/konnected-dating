@@ -34,6 +34,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('swipe-profile', [CustomerController::class,'swipeProfile'])->name('swipe-profile');
     Route::post('discover-profile', [CustomerController::class,'discoverProfile'])->name('discover-profile');
     Route::post('review-later', [CustomerController::class,'reviewLater'])->name('review-later');
+    Route::get('get-undo-profile-data', [CustomerController::class,'undoProfile'])->name('undo-Profile');
     Route::get('who-viewed-me', [CustomerController::class,'whoViewedMe'])->name('who-viewed-me');
     Route::get('who-likes-me', [CustomerController::class,'whoLikesMe'])->name('who-likes-me');
     Route::get('review-later-list', [CustomerController::class,'reviewLaterList'])->name('review-later-list');

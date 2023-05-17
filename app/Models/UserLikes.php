@@ -22,4 +22,9 @@ class UserLikes extends Model
     {
         return $this->hasMany(User::class,'id','like_from');
     }
+   
+    public function usersLikesTo()
+    {
+        return $this->hasMany(User::class,'id','like_to');
+    }
 }
