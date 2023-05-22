@@ -15,6 +15,12 @@ class UserQuestion extends Model
         'answer_id',
     ];
 
+    protected $casts = [
+        'user_id' => 'int',
+        "question_id"=>'int',
+        "answer_id"=>'int',
+    ];
+
     public function question()
     {
         return $this->belongsTo(Question::class);
