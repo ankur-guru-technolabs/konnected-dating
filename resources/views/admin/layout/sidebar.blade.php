@@ -40,79 +40,79 @@
                     <ul class="nav ">
                         <li class="nav-item {{isActive('questions.ages.list')}}">
                             <a class="nav-link text-white {{isActive('questions.ages.list')}}" href="{{route('questions.ages.list')}}">
-                                <i class="material-icons opacity-10">list_alt</i>
+                                <img class="menu-img-class" src="{{ asset('images/age.png') }}">
                                 <span class="sidenav-normal  ms-2  ps-1">Age</span>
                             </a>
                         </li>
                         <li class="nav-item {{isActive('questions.bodytype.list')}}">
                             <a class="nav-link text-white {{isActive('questions.bodytype.list')}}" href="{{route('questions.bodytype.list')}}">
-                                <i class="material-icons opacity-10">list_alt</i>
+                                <img class="menu-img-class" src="{{ asset('images/body-type.png') }}">
                                 <span class="sidenav-normal  ms-2  ps-1">Body Types</span>
                             </a>
                         </li>
                         <li class="nav-item {{isActive('questions.children.list')}}">
                             <a class="nav-link text-white {{isActive('questions.children.list')}}" href="{{route('questions.children.list')}}">
-                                <i class="material-icons opacity-10">list_alt</i>
+                                <img class="menu-img-class" src="{{ asset('images/children.png') }}">
                                 <span class="sidenav-normal  ms-2  ps-1">Childrens</span>
                             </a>
                         </li>
                         <li class="nav-item {{isActive('questions.education.list')}}">
                             <a class="nav-link text-white {{isActive('questions.education.list')}}" href="{{route('questions.education.list')}}">
-                                <i class="material-icons opacity-10">list_alt</i>
+                                <img class="menu-img-class" src="{{ asset('images/education.png') }}">
                                 <span class="sidenav-normal  ms-2  ps-1">Education</span>
                             </a>
                         </li>
                         <li class="nav-item {{isActive('questions.ethnicity.list')}}">
                             <a class="nav-link text-white {{isActive('questions.ethnicity.list')}}" href="{{route('questions.ethnicity.list')}}">
-                                <i class="material-icons opacity-10">list_alt</i>
+                                <img class="menu-img-class" src="{{ asset('images/ethincities.png') }}">
                                 <span class="sidenav-normal  ms-2  ps-1">Ethnicities</span>
                             </a>
                         </li>
                         <li class="nav-item {{isActive('questions.faith.list')}}">
                             <a class="nav-link text-white {{isActive('questions.faith.list')}}" href="{{route('questions.faith.list')}}">
-                                <i class="material-icons opacity-10">list_alt</i>
+                                <img class="menu-img-class" src="{{ asset('images/faith.png') }}">
                                 <span class="sidenav-normal  ms-2  ps-1">Faiths</span>
                             </a>
                         </li>
                         <li class="nav-item {{isActive('questions.gender.list')}}">
                             <a class="nav-link text-white {{isActive('questions.gender.list')}}" href="{{route('questions.gender.list')}}">
-                                <i class="material-icons opacity-10">list_alt</i>
+                                <img class="menu-img-class" src="{{ asset('images/genders.png') }}">
                                 <span class="sidenav-normal  ms-2  ps-1">Genders</span>
                             </a>
                         </li>
                         <li class="nav-item {{isActive('questions.height.list')}}">
                             <a class="nav-link text-white {{isActive('questions.height.list')}}" href="{{route('questions.height.list')}}">
-                                <i class="material-icons opacity-10">list_alt</i>
+                                <img class="menu-img-class" src="{{ asset('images/height.png') }}">
                                 <span class="sidenav-normal  ms-2  ps-1">Heights</span>
                             </a>
                         </li>
                         <li class="nav-item {{isActive('questions.hobby.list')}}">
                             <a class="nav-link text-white {{isActive('questions.hobby.list')}}" href="{{route('questions.hobby.list')}}">
-                                <i class="material-icons opacity-10">list_alt</i>
+                                <img class="menu-img-class" src="{{ asset('images/hobbies.png') }}">
                                 <span class="sidenav-normal  ms-2  ps-1">Hobbies</span>
                             </a>
                         </li>
                         <li class="nav-item {{isActive('questions.icebreaker.list')}}">
                             <a class="nav-link text-white {{isActive('questions.icebreaker.list')}}" href="{{route('questions.icebreaker.list')}}">
-                                <i class="material-icons opacity-10">list_alt</i>
+                                <img class="menu-img-class" src="{{ asset('images/ice-breaker.png') }}">
                                 <span class="sidenav-normal  ms-2  ps-1">Ice Breakers</span>
                             </a>
                         </li>
                         <li class="nav-item {{isActive('questions.industry.list')}}">
                             <a class="nav-link text-white {{isActive('questions.industry.list')}}" href="{{route('questions.industry.list')}}">
-                                <i class="material-icons opacity-10">list_alt</i>
+                                <img class="menu-img-class" src="{{ asset('images/industry.png') }}">
                                 <span class="sidenav-normal  ms-2  ps-1">Industries</span>
                             </a>
                         </li>
                         <li class="nav-item {{isActive('questions.question.list')}}">
                             <a class="nav-link text-white {{isActive('questions.question.list')}}" href="{{route('questions.question.list')}}">
-                                <i class="material-icons opacity-10">list_alt</i>
+                                <img class="menu-img-class" src="{{ asset('images/question.png') }}">
                                 <span class="sidenav-normal  ms-2  ps-1">Questions</span>
                             </a>
                         </li>
                         <li class="nav-item {{isActive('questions.salary.list')}}">
                             <a class="nav-link text-white {{isActive('questions.salary.list')}}" href="{{route('questions.salary.list')}}">
-                                <i class="material-icons opacity-10">list_alt</i>
+                                <img class="menu-img-class" src="{{ asset('images/salary.png') }}">
                                 <span class="sidenav-normal  ms-2  ps-1">Salaries</span>
                             </a>
                         </li>

@@ -5,6 +5,10 @@
     @include('admin.layout.common-head')
 </head>
 <style>
+    .menu-img-class{
+        height: 25px;
+        width: 25px;
+    }
     .custom-margin-auto{
         margin: 0 0 0 auto;
     }
