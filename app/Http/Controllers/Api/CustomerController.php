@@ -65,7 +65,7 @@ class CustomerController extends BaseController
             }, 'photos', 'userQuestions' => function ($query) {
                 $query->leftJoin('questions', 'questions.id', '=', 'user_questions.question_id')
                       ->leftJoin('sub_questions', 'sub_questions.id', '=', 'user_questions.answer_id')
-                      ->select('user_questions.id', 'user_questions.user_id', 'user_questions.question_id', 'user_questions.answer_id as selected_answer_id', 'questions.question', 'sub_questions.option');
+                      ->select('user_questions.id', 'user_questions.user_id', 'user_questions.question_id', 'user_questions.answer_id', 'questions.question', 'sub_questions.option');
             }])->find($request->id);
             
             if(!empty($data['user']) && !empty($data['user']['iceBreakers'])){
