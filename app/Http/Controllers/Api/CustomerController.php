@@ -81,7 +81,7 @@ class CustomerController extends BaseController
             $hobbyNames                       = Hobby::whereRaw("FIND_IN_SET(id, '$hobbies_id') > 0")->pluck('name');
             
             $ethnticity_id                    = $data['user']['ethnticity'];
-            $ethnticity_array                 = explode(",", $hobbies_id); 
+            $ethnticity_array                 = explode(",", $ethnticity_id); 
             $data['user']['ethnticity_array'] = array_map('intval', $ethnticity_array);
             $ethnticityNames                  = Ethnicity::whereRaw("FIND_IN_SET(id, '$ethnticity_id') > 0")->pluck('name');
 

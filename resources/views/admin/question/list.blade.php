@@ -128,7 +128,7 @@
 </div>
 @endsection
 @section('scripts')
-<script src="https://bootstrap-tagsinput.github.io/bootstrap-tagsinput/dist/bootstrap-tagsinput.min.js"></script>
+<script src="{{ asset('assets/js/plugins/bootstrap-tagsinput.js')}}"></script>
 <script>
     $(document).ready(function() {
         $('#question_list_table').DataTable();
@@ -142,10 +142,10 @@
                 method: 'GET',
                 success: function(response) {
                     var tags = response.tags.map(function(tag) {
-                                    return tag.option;
-                                });
+                        return tag.option;
+                    });
                     var tagsInput = $('#editModal').find('.tagsinput');
-                    tagsInput.tagsinput('removeAll'); 
+                    tagsInput.tagsinput('removeAll');
                     $.each(tags, function(index, value) {
                         tagsInput.tagsinput('add', value);
                     });
