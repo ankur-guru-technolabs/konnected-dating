@@ -17,7 +17,7 @@ use App\Models\Industry;
 use App\Models\Icebreaker;
 use App\Models\Question;
 use App\Models\Salary;
-use App\Models\Subquestion;
+use App\Models\SubQuestion;
 
 class AdminController extends BaseController
 {
