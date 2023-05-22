@@ -264,14 +264,17 @@
      * Assembly value by retrieving the value of each item, and set it on the
      * element.
      */
-    pushVal: function() {
-      var self = this,
-          val = $.map(self.items(), function(item) {
-            return self.options.itemValue(item).toString();
-          });
-
-      self.$element.val(val, true);
-
+     pushVal: function() {
+      var self = this;
+      var delimiter = self.options.delimiter;
+      var separator = '₹';
+    
+      var val = $.map(self.items(), function(item) {
+        return self.options.itemValue(item).toString();
+      });
+    
+      self.$element.val(val.join(separator), true);
+    
       if (self.options.triggerChange)
         self.$element.trigger('change');
     },

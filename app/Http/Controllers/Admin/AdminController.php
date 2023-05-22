@@ -353,8 +353,7 @@ class AdminController extends BaseController
         $questions->save();
 
         $questionId = $questions->id;
-        $options =  explode(',',$request->option);
-
+        $options =  explode('₹',$request->option);
         foreach($options as $option){
             $sub_question = new Subquestion;
             $sub_question->question_id = $questionId;
@@ -373,7 +372,7 @@ class AdminController extends BaseController
             $questions->save();
         }
 
-        $options =  explode(',',$request->option);
+        $options =  explode('₹',$request->option);
 
         foreach($options as $option){
             $sub_question = new Subquestion;
