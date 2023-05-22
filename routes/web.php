@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\LoginController;
@@ -24,6 +25,88 @@ Route::middleware(['admin'])->group(function () {
 
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    Route::group(['prefix' => 'questions','as'=>'questions.'], function () {
+        Route::group(['prefix' => 'ages','as'=>'ages.'], function () {
+            Route::get('list', [AdminController::class, 'ageList'])->name('list');
+            Route::post('store', [AdminController::class, 'ageStore'])->name('store');
+            Route::post('update', [AdminController::class, 'ageUpdate'])->name('update');
+            Route::get('delete/{id}', [AdminController::class, 'ageDelete'])->name('delete');
+        });
+        Route::group(['prefix' => 'bodytype','as'=>'bodytype.'], function () {
+            Route::get('list', [AdminController::class, 'bodytypeList'])->name('list');
+            Route::post('store', [AdminController::class, 'bodytypeStore'])->name('store');
+            Route::post('update', [AdminController::class, 'bodytypeUpdate'])->name('update');
+            Route::get('delete/{id}', [AdminController::class, 'bodytypeDelete'])->name('delete');
+        });
+        Route::group(['prefix' => 'children','as'=>'children.'], function () {
+            Route::get('list', [AdminController::class, 'childrenList'])->name('list');
+            Route::post('store', [AdminController::class, 'childrenStore'])->name('store');
+            Route::post('update', [AdminController::class, 'childrenUpdate'])->name('update');
+            Route::get('delete/{id}', [AdminController::class, 'childrenDelete'])->name('delete');
+        });
+        Route::group(['prefix' => 'education','as'=>'education.'], function () {
+            Route::get('list', [AdminController::class, 'educationList'])->name('list');
+            Route::post('store', [AdminController::class, 'educationStore'])->name('store');
+            Route::post('update', [AdminController::class, 'educationUpdate'])->name('update');
+            Route::get('delete/{id}', [AdminController::class, 'educationDelete'])->name('delete');
+        });
+        Route::group(['prefix' => 'ethnicity','as'=>'ethnicity.'], function () {
+            Route::get('list', [AdminController::class, 'ethnicityList'])->name('list');
+            Route::post('store', [AdminController::class, 'ethnicityStore'])->name('store');
+            Route::post('update', [AdminController::class, 'ethnicityUpdate'])->name('update');
+            Route::get('delete/{id}', [AdminController::class, 'ethnicityDelete'])->name('delete');
+        });
+        Route::group(['prefix' => 'faith','as'=>'faith.'], function () {
+            Route::get('list', [AdminController::class, 'faithList'])->name('list');
+            Route::post('store', [AdminController::class, 'faithStore'])->name('store');
+            Route::post('update', [AdminController::class, 'faithUpdate'])->name('update');
+            Route::get('delete/{id}', [AdminController::class, 'faithDelete'])->name('delete');
+        });
+        Route::group(['prefix' => 'gender','as'=>'gender.'], function () {
+            Route::get('list', [AdminController::class, 'genderList'])->name('list');
+            Route::post('store', [AdminController::class, 'genderStore'])->name('store');
+            Route::post('update', [AdminController::class, 'genderUpdate'])->name('update');
+            Route::get('delete/{id}', [AdminController::class, 'genderDelete'])->name('delete');
+        });
+        Route::group(['prefix' => 'height','as'=>'height.'], function () {
+            Route::get('list', [AdminController::class, 'heightList'])->name('list');
+            Route::post('store', [AdminController::class, 'heightStore'])->name('store');
+            Route::post('update', [AdminController::class, 'heightUpdate'])->name('update');
+            Route::get('delete/{id}', [AdminController::class, 'heightDelete'])->name('delete');
+        });
+        Route::group(['prefix' => 'hobby','as'=>'hobby.'], function () {
+            Route::get('list', [AdminController::class, 'hobbyList'])->name('list');
+            Route::post('store', [AdminController::class, 'hobbyStore'])->name('store');
+            Route::post('update', [AdminController::class, 'hobbyUpdate'])->name('update');
+            Route::get('delete/{id}', [AdminController::class, 'hobbyDelete'])->name('delete');
+        });
+        Route::group(['prefix' => 'icebreaker','as'=>'icebreaker.'], function () {
+            Route::get('list', [AdminController::class, 'icebreakerList'])->name('list');
+            Route::post('store', [AdminController::class, 'icebreakerStore'])->name('store');
+            Route::post('update', [AdminController::class, 'icebreakerUpdate'])->name('update');
+            Route::get('delete/{id}', [AdminController::class, 'icebreakerDelete'])->name('delete');
+        });
+        Route::group(['prefix' => 'industry','as'=>'industry.'], function () {
+            Route::get('list', [AdminController::class, 'industryList'])->name('list');
+            Route::post('store', [AdminController::class, 'industryStore'])->name('store');
+            Route::post('update', [AdminController::class, 'industryUpdate'])->name('update');
+            Route::get('delete/{id}', [AdminController::class, 'industryDelete'])->name('delete');
+        });
+        Route::group(['prefix' => 'question','as'=>'question.'], function () {
+            Route::get('list', [AdminController::class, 'questionList'])->name('list');
+            Route::post('store', [AdminController::class, 'questionStore'])->name('store');
+            Route::post('update', [AdminController::class, 'questionUpdate'])->name('update');
+            Route::get('delete/{id}', [AdminController::class, 'questionDelete'])->name('delete');
+            Route::get('subQuestion/{id}', [AdminController::class, 'subQuestionList'])->name('subQuestionList');
+        });
+        Route::group(['prefix' => 'salary','as'=>'salary.'], function () {
+            Route::get('list', [AdminController::class, 'salaryList'])->name('list');
+            Route::post('store', [AdminController::class, 'salaryStore'])->name('store');
+            Route::post('update', [AdminController::class, 'salaryUpdate'])->name('update');
+            Route::get('delete/{id}', [AdminController::class, 'salaryDelete'])->name('delete');
+        });
+    });
+    
     Route::group(['prefix' => 'users','as'=>'users.'], function () {
         Route::get('list', [UserController::class, 'list'])->name('list');
         Route::post('status/update', [UserController::class, 'updateStatus'])->name('status-update');

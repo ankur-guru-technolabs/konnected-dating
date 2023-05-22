@@ -4,7 +4,15 @@
 <head>
     @include('admin.layout.common-head')
 </head>
-
+<style>
+    .custom-margin-auto{
+        margin: 0 0 0 auto;
+    }
+    .custom-button-class{
+        margin-right: 17px !important;
+       margin-bottom: 0rem !important;
+    }
+</style>
 <body class="g-sidenav-show  bg-gray-200">
 
     @include('admin.layout.sidebar')
