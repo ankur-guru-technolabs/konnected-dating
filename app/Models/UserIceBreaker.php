@@ -14,4 +14,9 @@ class UserIceBreaker extends Model
         'ice_breaker_id',
         'answer',
     ];
+
+    protected $casts = [
+        'user_id' => 'int',
+        "ice_breaker_id"=>'int',
+    ];
 }

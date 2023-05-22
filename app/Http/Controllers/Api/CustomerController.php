@@ -52,8 +52,9 @@ class CustomerController extends BaseController
                 ->get();
 
             foreach ($iceBreakers as $iceBreaker) {
-                $iceBreaker->user_id = $request->id;
-                $iceBreaker->ice_breaker_id = $iceBreaker->id;
+                $iceBreaker->id = (int)$iceBreaker->id;
+                $iceBreaker->user_id = (int)$request->id;
+                $iceBreaker->ice_breaker_id = (int)$iceBreaker->id;
                 $iceBreaker->answer =  null;
                 $iceBreaker->question =  $iceBreaker->question;
             }
