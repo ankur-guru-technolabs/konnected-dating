@@ -163,7 +163,11 @@ class AuthController extends BaseController
                         if($user->email_verified == 0){
                             $request1 = new Request();
                             $request1->merge(['email' => $user->email]);
-                            $this->sendOtp($request1);
+                            $response = $this->sendOtp($request1);
+                            $data11 = json_decode($response->getContent(), true);  
+                            if ($data11 && isset($data11['data']['otp'])) {
+                                $data['otp'] = (int)$data11['data']['otp'];  
+                            } 
                         }
 
                         if($user->email_verified == 1 && $user->phone_verified = 1 && $user->otp_verified == 1 && !isset($request->id)){
@@ -251,7 +255,7 @@ class AuthController extends BaseController
                 'ethnticity' => 'required',
                 'hobbies'    => 'required',
                 'photos'     => 'required|array|min:4',
-                'photos.*'   => 'required|file|mimes:jpeg,png,jpg,mp4,mov,avi|max:10240', 
+                'photos.*'   => 'required|file|mimes:jpeg,png,jpg,mp4,mov,avi|max:100000', 
                 'thumbnail_image'              => 'required|file|mimes:jpeg,png,jpg',
                 'ice_breaker'                  => 'required|array|min:3',
                 'ice_breaker.*.ice_breaker_id' => 'required',

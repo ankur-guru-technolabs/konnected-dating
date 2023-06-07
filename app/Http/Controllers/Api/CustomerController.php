@@ -7,6 +7,7 @@ use App\Http\Controllers\BaseController;
 use App\Http\Controllers\API\AuthController;
 use App\Models\Age;
 use App\Models\Bodytype;
+use App\Models\Chat;
 use App\Models\Children;
 use App\Models\Education;
 use App\Models\Ethnicity;
@@ -25,6 +26,7 @@ use App\Models\UserPhoto;
 use App\Models\UserQuestion;
 use App\Models\UserReviewLater;
 use App\Models\UserView;
+use App\Models\UserReport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Exception;
@@ -32,6 +34,7 @@ use Helper;
 use Validator;
 use DB;
 use Laravel\Ui\Presets\React;
+use App\Lib\RtcTokenBuilder;
 
 class CustomerController extends BaseController
 {
@@ -157,7 +160,7 @@ class CustomerController extends BaseController
                 'ethnticity' => 'required',
                 'hobbies'    => 'required',
                 'photos'     => 'sometimes|required',
-                'photos.*'   => 'sometimes|required|file|mimes:jpeg,png,jpg,mp4,mov,avi|max:10240',
+                'photos.*'   => 'sometimes|required|file|mimes:jpeg,png,jpg,mp4,mov,avi|max:100000',
                 'thumbnail_image'              => 'sometimes|file|mimes:jpeg,png,jpg',
                 'ice_breaker'                  => 'required|array|min:3',
                 'ice_breaker.*.ice_breaker_id' => 'required',
@@ -315,9 +318,9 @@ class CustomerController extends BaseController
             $opposite_request = UserLikes::where('like_from',$input['like_to'])->where('like_to',$input['like_from'])->where('status',$input['status'])->exists();
            
             if($opposite_request && $input['status'] == 1){
-                $maxId = UserLikes::where('id', '>', 0)->max('id');
+                $maxId = UserLikes::where('match_id', '>', 0)->max('match_id');
              
-                $input['match_id']      = $maxId > 10000 ? $maxId + 1 : 10000;
+                $input['match_id']      = ($maxId > 10000 || $maxId == 10000) ? $maxId + 1 : 10000;
                 $input['match_status']  = 1;
                 $input['matched_at']    = now();
                 
@@ -435,6 +438,7 @@ class CustomerController extends BaseController
                                         $profile_photo_media = $user->photos->firstWhere('type', 'image');
                                         $user->name = $user->first_name.' '.$user->last_name;
                                         $user->profile_photo = $profile_photo_media->profile_photo;
+                                        $user->age_new  = Age::where('id',$user->age)->pluck('year')->first();
                                         unset($user->photos);
                                         return $user;
                                     });
@@ -449,6 +453,183 @@ class CustomerController extends BaseController
             // }
 
             return $this->success($data,'Discovery list');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
+    // MATCHED USER LISTING
+
+    public function matchedUserList(Request $request){
+
+        try{
+            $matched_user_listing = UserLikes::with(['users:id,first_name,last_name,age', 'users.photos:id,user_id,name,type'])
+                                        ->where('user_likes.like_to',Auth::id())
+                                        ->where('user_likes.status',1)
+                                        ->where('user_likes.match_status',1)
+                                        ->where('user_likes.match_id','>',0)
+                                        ->leftJoin('chats as c', function ($join) {
+                                            $join->on('user_likes.match_id', '=', 'c.match_id');
+                                        }) 
+                                        ->whereNull('c.id') 
+                                        ->select('user_likes.id', 'user_likes.like_from','user_likes.like_to','user_likes.match_id')
+                                        ->get();
+
+            $data['matched_user_listing'] = $matched_user_listing->map(function ($user){
+                                            if($user->users->isNotEmpty()){
+                                                $profile_photo_media = $user->users->first()->photos->firstWhere('type', 'image'); 
+                                                $user->user_id = $user->users->first()->id;
+                                                $user->name = $user->users->first()->first_name.' '.$user->users->first()->last_name;
+                                                $user->profile_photo = $profile_photo_media->profile_photo;
+                                                unset($user->users);
+                                            }
+                                            return $user;
+                                        })->filter(function ($user){
+                                            return isset($user->user_id);
+                                        })
+                                        ->values();
+
+
+            return $this->success($data,'Matched user listing');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
+    // GET CHAT LIST
+
+    public function chatList(Request $request){
+        try{
+            $chat_list          =   Chat::with(['users:id,first_name,last_name,age', 'users.photos:id,user_id,name,type'])
+                                    ->where('receiver_id',Auth::id())
+                                    ->select('chats.id', 'chats.match_id','chats.sender_id','chats.receiver_id','chats.read_status')
+                                    ->selectRaw('MAX(chats.message) as last_message')
+                                    ->selectRaw('(SELECT COUNT(*) FROM chats AS sub_chats WHERE sub_chats.match_id = chats.match_id AND sub_chats.read_status = 0 AND sub_chats.receiver_id = '.Auth::id().') as unread_message_count')
+                                    ->leftJoin('user_likes as ul', function ($join) {
+                                        $join->on('chats.match_id', '=', 'ul.match_id');
+                                    })
+                                    ->where('ul.match_status',1) 
+                                    ->groupBy('chats.match_id')
+                                    ->paginate($request->input('perPage'), ['*'], 'page', $request->input('page'));
+
+            $data['chat_list']  =   $chat_list->map(function ($user){
+                                            if($user->users->isNotEmpty()){
+                                                $profile_photo_media = $user->users->first()->photos->firstWhere('type', 'image'); 
+                                                $user->user_id = $user->users->first()->id;
+                                                $user->name = $user->users->first()->first_name.' '.$user->users->first()->last_name;
+                                                $user->profile_photo = $profile_photo_media->profile_photo;
+                                                $user->unread_message_count = (int)$user->unread_message_count;
+                                                $user->last_message = $user->last_message;
+                                                unset($user->users);
+                                            }
+                                            return $user;
+                                        })->filter(function ($user){
+                                            return isset($user->user_id);
+                                        })
+                                        ->values();
+
+            $data['current_page'] = $chat_list->currentPage();
+            $data['per_page']     = $chat_list->perPage();
+            $data['total']        = $chat_list->total();
+            $data['last_page']    = $chat_list->lastPage();
+            return $this->success($data,'Chat list');
+
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
+    // CHANGE MESSAGE READ STATUS 
+
+    public function changeReadStatus(Request $request){
+        try{
+            $chat_read_status   =   Chat::where('receiver_id',Auth::id())
+                                    ->where('match_id',$request->match_id)
+                                    ->update(['read_status' => 1]);
+
+            return $this->success([],'Chat read successfully');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
+    // SEND MESSAGE 
+
+    public function sendMessage(Request $request){
+        try{
+            $validateData = Validator::make($request->all(), [
+                'match_id' => 'required',
+                'receiver_id' => 'required',
+                'message' => 'required',
+            ]);
+
+            if ($validateData->fails()) {
+                return $this->error($validateData->errors(),'Validation error',403);
+            }
+
+            $chats = new Chat();
+            $chats->match_id    = $request->match_id;
+            $chats->sender_id   = Auth::id();
+            $chats->receiver_id = $request->receiver_id;
+            $chats->message     = $request->message;
+            $chats->save();
+
+            return $this->success([],'Message send successfully');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
+    // UNMATCH 
+
+    public function unmatch(Request $request){
+        try{
+
+            $validateData = Validator::make($request->all(), [
+                'match_id' => 'required',
+            ]);
+
+            if ($validateData->fails()) {
+                return $this->error($validateData->errors(),'Validation error',403);
+            }
+
+            UserLikes::where('user_likes.match_id',$request->match_id)->update(['user_likes.match_status' => 0]);
+
+            return $this->success([],'Unmatch done successfully');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
+    // REPORT 
+
+    public function report(Request $request){
+        try{
+            $validateData = Validator::make($request->all(), [
+                'match_id' => 'required',
+                'message' => 'required',
+            ]);
+
+            if ($validateData->fails()) {
+                return $this->error($validateData->errors(),'Validation error',403);
+            }
+
+            UserLikes::where('user_likes.match_id',$request->match_id)->update(['user_likes.match_status' => 0]);
+
+            $user_report = new UserReport();
+            $user_report->match_id          = $request->match_id;
+            $user_report->reporter_id       = Auth::id();
+            $user_report->reported_user_id  = $request->reported_user_id;
+            $user_report->message           = $request->message;
+            $user_report->save();
+
+            return $this->success([],'Report done successfully');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
         }
@@ -641,6 +822,67 @@ class CustomerController extends BaseController
         return $this->error('Something went wrong','Something went wrong');
     }
     
+    // VIDEO CALL
+
+    public function singleVideoCall(Request $request){
+        try{
+            $validateData = Validator::make($request->all(),[
+                'receiver_id'  => 'required|int',
+            ]);
+    
+            if ($validateData->fails()) {
+                return $this->error($validateData->errors(),'Validation error',403);
+            }
+
+            if (Auth::user()) { 
+                $appID =  env("AGORA_APP_ID", "d13ef194c8e74a21be2d1e7672792be3");
+                $appCertificate = env("AGORA_APP_CERTIFICATE", "cbef905ce5c5413884623f8fc0567215");
+
+                $channelName = $this->generateRandomChannel(8);
+                $userId = $this->generateRandomUid();
+                $role = RtcTokenBuilder::RoleAttendee;
+
+                $expireTimeInSeconds = 3600;
+                $currentTimestamp = now()->getTimestamp();
+                $privilegeExpiredTs = $currentTimestamp + $expireTimeInSeconds;
+
+                $rtcToken1 = RtcTokenBuilder::buildTokenWithUserAccount($appID, $appCertificate, $channelName, $userId, $role, $privilegeExpiredTs);
+                $data = [
+                    'sender_id'     =>Auth::id(),
+                    'receiver_u_id' =>$userId,
+                    'channel_name'  => $channelName,
+                    'receiver_token'=>$rtcToken1,
+                ];    
+
+                return $this->success($data,'Video call done');
+            }
+            return $this->error('Something went wrong','Something went wrong');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
+    public function generateRandomChannel($length = 8) {
+        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, $charactersLength - 1)];
+        }
+        return $randomString;
+    }
+
+    public function generateRandomUid($length = 9) {
+        $characters = '0123456789';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, $charactersLength - 1)];
+        }
+        return $randomString;
+    }
+
     // USER LOGOUT
     public function logout(){
         try{

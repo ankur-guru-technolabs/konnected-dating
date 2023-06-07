@@ -33,11 +33,18 @@ Route::middleware('auth:api')->group(function () {
     Route::post('update-user-profile', [CustomerController::class,'updateProfile'])->name('update-user-profile');
     Route::post('swipe-profile', [CustomerController::class,'swipeProfile'])->name('swipe-profile');
     Route::post('discover-profile', [CustomerController::class,'discoverProfile'])->name('discover-profile');
+    Route::get('matched-user-list', [CustomerController::class,'matchedUserList'])->name('matched-user-list');
+    Route::get('chat-list', [CustomerController::class,'chatList'])->name('chat-list');
+    Route::post('change-read-status', [CustomerController::class,'changeReadStatus'])->name('change-read-status');
+    Route::post('send-message', [CustomerController::class,'sendMessage'])->name('send-message');
+    Route::post('unmatch', [CustomerController::class,'unmatch'])->name('unmatch');
+    Route::post('report', [CustomerController::class,'report'])->name('report');
     Route::post('review-later', [CustomerController::class,'reviewLater'])->name('review-later');
     Route::get('get-undo-profile-data', [CustomerController::class,'undoProfile'])->name('undo-Profile');
     Route::get('who-viewed-me', [CustomerController::class,'whoViewedMe'])->name('who-viewed-me');
     Route::get('who-likes-me', [CustomerController::class,'whoLikesMe'])->name('who-likes-me');
     Route::get('review-later-list', [CustomerController::class,'reviewLaterList'])->name('review-later-list');
     Route::post('update-location', [CustomerController::class,'updateLocation'])->name('update-location');
+    Route::post('single-video-call', [CustomerController::class,'singleVideoCall'])->name('single-video-call');
     Route::get('log-out', [CustomerController::class,'logout'])->name('log-out');
 });
