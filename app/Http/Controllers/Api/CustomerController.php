@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use Illuminate\Support\Facades\File;
 use App\Http\Controllers\BaseController;
-use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\Api\AuthController;
 use App\Models\Age;
 use App\Models\Bodytype;
 use App\Models\Chat;
