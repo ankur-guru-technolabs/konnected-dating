@@ -260,7 +260,7 @@ class CustomerController extends BaseController
                 if ($request->hasFile('thumbnail_image')) {
 
                     $user_old_thumbnail_name = UserPhoto::where('user_id',$request->user_id)->where('type','thumbnail_image')->pluck('name')->toArray();
-                    $path = public_path('user_profile/' . $user_old_thumbnail_name);
+                    $path = public_path('user_profile/' . $user_old_thumbnail_name[0]);
                     if (File::exists($path)) {
                         if (!is_writable($path)) {
                             chmod($path, 0777);
