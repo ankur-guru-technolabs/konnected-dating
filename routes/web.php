@@ -112,6 +112,22 @@ Route::middleware(['admin'])->group(function () {
         Route::post('status/update', [UserController::class, 'updateStatus'])->name('status-update');
     });
 
+    Route::group(['prefix' => 'feedback','as'=>'feedback.'], function () {
+        Route::get('list', [AdminController::class, 'feedbackList'])->name('list');
+    });
+
+    Route::group(['prefix' => 'static-pages','as'=>'static-pages.'], function () {
+        Route::get('list', [AdminController::class, 'staticPagesList'])->name('list');
+        Route::get('page-edit/{id}', [AdminController::class, 'pageEdit'])->name('page-edit');
+        Route::post('page-update', [AdminController::class, 'pageUpdate'])->name('page-update');
+    });
+  
+    Route::group(['prefix' => 'faq','as'=>'faq.'], function () {
+        Route::get('list', [AdminController::class, 'faqList'])->name('list');
+        Route::get('faq-edit/{id}', [AdminController::class, 'faqEdit'])->name('faq-edit');
+        Route::post('faq-update', [AdminController::class, 'faqUpdate'])->name('faq-update');
+    });
+
 });
 
 

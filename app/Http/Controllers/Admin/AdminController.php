@@ -7,9 +7,11 @@ use App\Http\Controllers\BaseController;
 use App\Models\Age;
 use App\Models\Bodytype;
 use App\Models\Children;
+use App\Models\ContactSupport;
 use App\Models\Education;
 use App\Models\Ethnicity;
 use App\Models\Faith;
+use App\Models\Faq;
 use App\Models\Gender;
 use App\Models\Height;
 use App\Models\Hobby;
@@ -17,8 +19,9 @@ use App\Models\Industry;
 use App\Models\Icebreaker;
 use App\Models\Question;
 use App\Models\Salary;
+use App\Models\Setting;
 use App\Models\SubQuestion;
-
+use Validator;
 class AdminController extends BaseController
 {
     // AGE
@@ -446,5 +449,78 @@ class AdminController extends BaseController
         $salaries = Salary::findOrFail($id);
         $salaries->delete();
         return redirect()->route('questions.salary.list')->with('message','Salary deleted Successfully');
+    }
+
+    // FEEDBACK
+
+    public function feedbackList(){
+        $feedbacks = ContactSupport::all();
+        return view('admin.feedback.list',compact('feedbacks'));
+    }
+
+    // SETTING
+
+    public function staticPagesList(){
+        $settings = Setting::all();
+        return view('admin.setting.list',compact('settings'));
+    }
+
+    public function pageEdit($id){
+        $settings = Setting::where('id',$id)->first();
+        return view('admin.setting.edit',compact('settings'));
+    }
+
+    public function pageUpdate(Request $request){
+
+        $validator = Validator::make($request->all(),[
+            'id'=>"required",
+            'title'=>"required",
+            'description'=>"required",
+        ]);
+
+        if ($validator->fails())
+        {
+            return back()->withInput()->withErrors($validator);
+        }
+
+        $input = $request->all();
+        $insert_data['title']       = $input['title'];
+        $insert_data['value']       = $input['description'];
+
+        Setting::where('id',$request->id)->update($insert_data);
+        return redirect()->route('static-pages.list')->with('message','Page updated Successfully'); 
+    }
+
+    // FAQ
+
+    public function faqList(){
+        $faqs = Faq::all();
+        return view('admin.faq.list',compact('faqs'));
+    }
+
+    public function faqEdit($id){
+        $faqs = Faq::where('id',$id)->first();
+        return view('admin.faq.edit',compact('faqs'));
+    }
+
+    public function faqUpdate(Request $request){
+
+        $validator = Validator::make($request->all(),[
+            'id'=>"required",
+            'question'=>"required",
+            'answer'=>"required",
+        ]);
+
+        if ($validator->fails())
+        {
+            return back()->withInput()->withErrors($validator);
+        }
+
+        $input = $request->all();
+        $insert_data['question']    = $input['question'];
+        $insert_data['answer']       = $input['answer'];
+
+        Faq::where('id',$request->id)->update($insert_data);
+        return redirect()->route('faq.list')->with('message','FAQ updated Successfully'); 
     }
 }
