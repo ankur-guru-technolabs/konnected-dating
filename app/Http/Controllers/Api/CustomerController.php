@@ -9,9 +9,11 @@ use App\Models\Age;
 use App\Models\Bodytype;
 use App\Models\Chat;
 use App\Models\Children;
+use App\Models\ContactSupport;
 use App\Models\Education;
 use App\Models\Ethnicity;
 use App\Models\Faith;
+use App\Models\Faq;
 use App\Models\Gender;
 use App\Models\Height;
 use App\Models\Hobby;
@@ -19,6 +21,7 @@ use App\Models\Industry;
 use App\Models\Icebreaker;
 use App\Models\Question;
 use App\Models\Salary; 
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\UserIceBreaker;
 use App\Models\UserLikes;
@@ -643,6 +646,33 @@ class CustomerController extends BaseController
         return $this->error('Something went wrong','Something went wrong');
     }
 
+    // CONTACTSUPPORT 
+
+    public function contactSupport(Request $request){
+        try{
+            $validateData = Validator::make($request->all(), [
+                'name' => 'required',
+                'email' => 'required',
+                'description' => 'required',
+            ]);
+
+            if ($validateData->fails()) {
+                return $this->error($validateData->errors(),'Validation error',403);
+            }
+
+            $support                = new ContactSupport();
+            $support->name          = $request->name;
+            $support->email         = $request->email;
+            $support->description   = $request->description;
+            $support->save();
+
+            return $this->success([],'Request added successfully');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
     // REVIEW LATER
 
     public function reviewLater(Request $request){ 
@@ -729,6 +759,30 @@ class CustomerController extends BaseController
             $data['last_page']    = $user_likes_listing->lastPage();
 
             return $this->success($data,'Who likes me listing');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
+    // STATIC PAGE DATA
+
+    public function staticPage(Request $request){
+        try{
+            $data['static_page_data']  = Setting::all();
+            return $this->success($data,'Static page data');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
+    // FAQ LIST
+
+    public function faqList(Request $request){
+        try{
+            $data['faq_data']  = Faq::all();
+            return $this->success($data,'Faq data');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
         }

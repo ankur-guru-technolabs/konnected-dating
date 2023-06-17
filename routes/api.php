@@ -39,10 +39,13 @@ Route::middleware('auth:api')->group(function () {
     Route::post('send-message', [CustomerController::class,'sendMessage'])->name('send-message');
     Route::post('unmatch', [CustomerController::class,'unmatch'])->name('unmatch');
     Route::post('report', [CustomerController::class,'report'])->name('report');
+    Route::post('contact-support', [CustomerController::class,'contactSupport'])->name('contact-support');
     Route::post('review-later', [CustomerController::class,'reviewLater'])->name('review-later');
     Route::get('get-undo-profile-data', [CustomerController::class,'undoProfile'])->name('undo-Profile');
     Route::get('who-viewed-me', [CustomerController::class,'whoViewedMe'])->name('who-viewed-me');
     Route::get('who-likes-me', [CustomerController::class,'whoLikesMe'])->name('who-likes-me');
+    Route::get('get-static-page', [CustomerController::class,'staticPage'])->name('get-static-page');
+    Route::get('get-faq-list', [CustomerController::class,'faqList'])->name('get-faq-list');
     Route::get('review-later-list', [CustomerController::class,'reviewLaterList'])->name('review-later-list');
     Route::post('update-location', [CustomerController::class,'updateLocation'])->name('update-location');
     Route::post('single-video-call', [CustomerController::class,'singleVideoCall'])->name('single-video-call');
