@@ -48,6 +48,7 @@ class User extends Authenticatable
         'email_verified',
         'phone_verified',
         'otp_verified',
+        'is_notification_mute',
         'password',
     ];
 
@@ -85,6 +86,7 @@ class User extends Authenticatable
         'email_verified' => 'int',
         'phone_verified'=> 'int',
         'otp_verified'=> 'int', 
+        'is_notification_mute'=> 'int', 
     ];
     
     // RELATIONSHIPS

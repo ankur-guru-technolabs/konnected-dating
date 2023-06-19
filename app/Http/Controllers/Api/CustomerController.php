@@ -19,6 +19,7 @@ use App\Models\Height;
 use App\Models\Hobby;
 use App\Models\Industry;
 use App\Models\Icebreaker;
+use App\Models\Notification;
 use App\Models\Question;
 use App\Models\Salary; 
 use App\Models\Setting;
@@ -442,13 +443,15 @@ class CustomerController extends BaseController
                                      ->where('ur1.user_review_from', '=', Auth::id());
                             })->whereNull('ul1.id')->whereNull('ul2.id')->whereNull('ur1.id');
                             
-            $user_list = $query->select('users.*')->paginate($request->input('perPage'), ['*'], 'page', $request->input('page'));
+            $user_list = $query->select('users.id', 'first_name', 'last_name', 'location', 'job', 'age','live_latitude','live_longitude')->paginate($request->input('perPage'), ['*'], 'page', $request->input('page'));
 
             $data['user_list']  =   $user_list->map(function ($user){
                                         $profile_photo_media = $user->photos->firstWhere('type', 'image');
                                         $user->name = $user->first_name.' '.$user->last_name;
                                         $user->profile_photo = $profile_photo_media->profile_photo;
                                         $user->age_new  = Age::where('id',$user->age)->pluck('year')->first();
+                                        $user->location  = $user->location;
+                                        $user->job  = $user->job;
                                         unset($user->photos);
                                         return $user;
                                     });
@@ -474,8 +477,7 @@ class CustomerController extends BaseController
     public function matchedUserList(Request $request){
 
         try{
-            $matched_user_listing = UserLikes::with(['users:id,first_name,last_name,age', 'users.photos:id,user_id,name,type'])
-                                        ->where('user_likes.like_to',Auth::id())
+            $matched_user_listing = UserLikes::where('user_likes.like_to',Auth::id())
                                         ->where('user_likes.status',1)
                                         ->where('user_likes.match_status',1)
                                         ->where('user_likes.match_id','>',0)
@@ -512,8 +514,7 @@ class CustomerController extends BaseController
 
     public function chatList(Request $request){
         try{
-            $chat_list          =   Chat::with(['users:id,first_name,last_name,age', 'users.photos:id,user_id,name,type'])
-                                    ->where('receiver_id',Auth::id())
+            $chat_list          =   Chat::where('receiver_id',Auth::id())
                                     ->select('chats.id', 'chats.match_id','chats.sender_id','chats.receiver_id','chats.read_status')
                                     ->selectRaw('MAX(chats.message) as last_message')
                                     ->selectRaw('(SELECT COUNT(*) FROM chats AS sub_chats WHERE sub_chats.match_id = chats.match_id AND sub_chats.read_status = 0 AND sub_chats.receiver_id = '.Auth::id().') as unread_message_count')
@@ -702,21 +703,24 @@ class CustomerController extends BaseController
 
     public function undoProfile (Request $request){
         try{
-            $undo_profile_listing = [UserLikes::with(['usersLikesTo.photos:id,user_id,name,type'])
-                                            ->where('user_likes.like_from',Auth::id())
+            $undo_profile_listing = [UserLikes::where('user_likes.like_from',Auth::id())
                                             ->where('user_likes.match_status',2)
                                             ->select('user_likes.id', 'user_likes.like_from','user_likes.like_to')
                                             ->latest()
                                             ->first()];
 
-            $data['undo_profile_listing'] = [];
+            $data['user_list'] = [];
 
             if ($undo_profile_listing[0]) {
-                $data['undo_profile_listing']  =   collect($undo_profile_listing)->map(function ($user){
-                    $profile_photo_media = $user->usersLikesTo[0]->photos->firstWhere('type', 'image');
-                    $user->usersLikesTo[0]->name = $user->usersLikesTo[0]->first_name . ' ' . $user->usersLikesTo[0]->last_name;
-                    $user->usersLikesTo[0]->profile_photo = $profile_photo_media->profile_photo;
-                    unset($user->usersLikesTo[0]->photos);
+                $data['user_list']  =   collect($undo_profile_listing)->map(function ($user){
+                    $profile_photo_media = $user->usersLikesTo->first()->photos->firstWhere('type', 'image');
+                    $user->id = $user->usersLikesTo->first()->id;
+                    $user->name = $user->usersLikesTo->first()->first_name . ' ' . $user->usersLikesTo->first()->last_name;
+                    $user->profile_photo = $profile_photo_media->profile_photo;
+                    $user->age_new  = Age::where('id',$user->usersLikesTo->first()->age)->pluck('year')->first();
+                    $user->location  = $user->usersLikesTo->first()->location;
+                    $user->job  = $user->usersLikesTo->first()->job;
+                    unset($user->usersLikesTo);
                     return $user;
                 });
                 UserLikes::where('user_likes.like_from',Auth::id())->where('user_likes.match_status',2)->latest()->first()->delete();
@@ -732,8 +736,7 @@ class CustomerController extends BaseController
 
     public function whoLikesMe(Request $request){
         try{
-            $user_likes_listing = UserLikes::with(['users:id,first_name,last_name,age', 'users.photos:id,user_id,name,type'])
-                                        ->where('user_likes.like_to',Auth::id())
+            $user_likes_listing = UserLikes::where('user_likes.like_to',Auth::id())
                                         ->where('user_likes.status',1)
                                         ->where('user_likes.match_status',2)
                                         ->select('user_likes.id', 'user_likes.like_from','user_likes.like_to')
@@ -793,8 +796,7 @@ class CustomerController extends BaseController
 
     public function whoViewedMe(Request $request){
         try{
-            $user_view_listing  = UserView::with(['users:id,first_name,last_name,age', 'users.photos:id,user_id,name,type'])
-                                        ->where('user_views.view_to',Auth::id())
+            $user_view_listing  = UserView::where('user_views.view_to',Auth::id())
                                         ->select('user_views.id', 'user_views.view_from','user_views.view_to')
                                         ->paginate($request->input('perPage'), ['*'], 'page', $request->input('page'));
                                         
@@ -828,8 +830,7 @@ class CustomerController extends BaseController
 
     public function reviewLaterList(Request $request){
         try{
-            $user_review_later_listing = UserReviewLater::with(['users:id,first_name,last_name,age', 'users.photos:id,user_id,name,type'])
-                                                ->where('user_review_laters.user_review_from',Auth::id())
+            $user_review_later_listing = UserReviewLater::where('user_review_laters.user_review_from',Auth::id())
                                                 ->select('user_review_laters.id', 'user_review_laters.user_review_from','user_review_laters.user_review_to')
                                                 ->paginate($request->input('perPage'), ['*'], 'page', $request->input('page'));
 
@@ -942,6 +943,73 @@ class CustomerController extends BaseController
             $randomString .= $characters[rand(0, $charactersLength - 1)];
         }
         return $randomString;
+    }
+
+    // NOTIFICATION LIST
+
+    public function notificationList(Request $request){
+        try{
+            $notification_id  = Notification::where('receiver_id',Auth::id())->orderBy('id','desc')->take(30)->pluck('id')->toArray();
+            Notification::whereNotIn('id', $notification_id)->where('receiver_id',Auth::id())->delete();
+
+            $notification_data  = Notification::where('receiver_id',Auth::id())->orderBy('id','desc')->take(30)->get();
+            $data['notification_data'] = $notification_data->map(function ($notification){
+                $date = date('d/m/Y', strtotime($notification->created_at));
+
+                if($date == date('d/m/Y')) {
+                    $notification->date = 'Today';
+                }else if($date == date('d/m/Y', strtotime('-1 day'))) {
+                    $notification->date = 'Yesterday';
+                }else{
+                    $notification->date = date('d M', strtotime($notification->created_at));
+                }
+                $profile_photo_media = $notification->notificationSender->first()->photos->firstWhere('type', 'image');
+                $notification->name = $notification->notificationSender->first()->first_name . ' ' . $notification->notificationSender->first()->last_name;
+                $notification->profile_photo = $profile_photo_media->profile_photo;
+                unset($notification->notificationSender);
+                
+                return $notification;
+            })->values();
+
+            return $this->success($data,'Notification data');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+  
+    // NOTIFICATION READ
+
+    public function notificationRead(){
+        try{
+            Notification::where('receiver_id',Auth::id())->update(['status'=>1]);
+            return $this->success([],'Notification read successfully');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+    
+    // NOTIFICATION SETTING
+
+    public function notificationSetting(){
+        try{
+            $user_data = User::where('id',Auth::id())->first();
+            if($user_data['is_notification_mute'] == '0'){
+                $user_data['is_notification_mute'] = '1';
+                $user_data->save();
+                return $this->success([],'Notification disable successfully');
+            }
+
+            if($user_data['is_notification_mute'] == 1){
+                $user_data['is_notification_mute'] = 0;
+                $user_data->save();
+                return $this->success([],'Notification enable successfully');
+            }
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
     }
 
     // USER LOGOUT
