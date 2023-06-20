@@ -110,6 +110,7 @@ class AuthController extends BaseController
             $validateData = Validator::make($request->all(), [
                 'email_or_phone' => 'required',
                 'otp' => 'required',
+                'type' => 'required',
             ]);
 
             if ($validateData->fails()) {
@@ -170,7 +171,7 @@ class AuthController extends BaseController
                             } 
                         }
 
-                        if($user->email_verified == 1 && $user->phone_verified = 1 && $user->otp_verified == 1 && !isset($request->id)){
+                        if($user->email_verified == 1 && $user->phone_verified = 1 && $user->otp_verified == 1 && $request->type != 'edit'){
                             $data['token'] = $user->createToken('Auth token')->accessToken;
                         }
                     } 
