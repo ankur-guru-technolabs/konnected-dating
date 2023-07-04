@@ -26,4 +26,9 @@ class Chat extends Model
     {
         return $this->hasMany(User::class,'id','sender_id');
     }
+    
+    public function userReceiver()
+    {
+        return $this->hasMany(User::class,'id','receiver_id');
+    }
 }

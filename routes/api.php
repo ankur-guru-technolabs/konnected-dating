@@ -29,7 +29,7 @@ Route::post('register', [AuthController::class, 'register'])->name('register');
 Route::post('email-exist', [AuthController::class, 'emailExist'])->name('email-exist');
  
 Route::middleware('auth:api')->group(function () {
-    Route::get('get-user-profile/{id}', [CustomerController::class,'getProfile'])->name('get-user-profile');
+    Route::get('get-user-profile/{id?}', [CustomerController::class,'getProfile'])->name('get-user-profile');
     Route::post('update-user-profile', [CustomerController::class,'updateProfile'])->name('update-user-profile');
     Route::post('swipe-profile', [CustomerController::class,'swipeProfile'])->name('swipe-profile');
     Route::post('discover-profile', [CustomerController::class,'discoverProfile'])->name('discover-profile');
@@ -49,6 +49,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('review-later-list', [CustomerController::class,'reviewLaterList'])->name('review-later-list');
     Route::post('update-location', [CustomerController::class,'updateLocation'])->name('update-location');
     Route::post('single-video-call', [CustomerController::class,'singleVideoCall'])->name('single-video-call');
+    Route::post('update-fcm-token', [CustomerController::class,'updateFcmToken'])->name('update-fcm-token');
     Route::get('get-notification-list', [CustomerController::class,'notificationList'])->name('get-notification-list');
     Route::get('notification-read', [CustomerController::class,'notificationRead'])->name('notification-read');
     Route::get('notification-setting', [CustomerController::class,'notificationSetting'])->name('notification-setting');

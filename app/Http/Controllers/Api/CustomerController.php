@@ -48,9 +48,9 @@ class CustomerController extends BaseController
 
     public function getProfile(Request $request){
         try{
-
+            $id = isset($request->id) ? $request->id : Auth::id();
             $answeredIceBreakerIds = DB::table('user_ice_breakers')
-                            ->where('user_id', $request->id)
+                            ->where('user_id', $id)
                             ->pluck('ice_breaker_id');
 
             $iceBreakers = DB::table('icebreakers')
@@ -60,7 +60,7 @@ class CustomerController extends BaseController
 
             foreach ($iceBreakers as $iceBreaker) {
                 $iceBreaker->id = (int)$iceBreaker->id;
-                $iceBreaker->user_id = (int)$request->id;
+                $iceBreaker->user_id = (int)$id;
                 $iceBreaker->ice_breaker_id = (int)$iceBreaker->id;
                 $iceBreaker->answer =  null;
                 $iceBreaker->question =  $iceBreaker->question;
@@ -73,7 +73,7 @@ class CustomerController extends BaseController
                 $query->leftJoin('questions', 'questions.id', '=', 'user_questions.question_id')
                       ->leftJoin('sub_questions', 'sub_questions.id', '=', 'user_questions.answer_id')
                       ->select('user_questions.id', 'user_questions.user_id', 'user_questions.question_id', 'user_questions.answer_id', 'questions.question', 'sub_questions.option');
-            }])->find($request->id);
+            }])->find($id);
             
             if(!empty($data['user']) && !empty($data['user']['iceBreakers'])){
                 $data['user']['ice_breakers_new'] = $data['user']['iceBreakers']->concat($iceBreakers);
@@ -107,14 +107,20 @@ class CustomerController extends BaseController
             $data['user']['salary_new']     = Salary::where('id',$data['user']['salary'])->pluck('range')->first();
             $data['user']['formatted_height']= Height::find($data['user']['height'])->formatted_height;
             
-            if($request->id != Auth::id()){
+            if($id != Auth::id()){
                 
                 // Check user is already liked and then after view profile ? in that scnario no data will inserted
 
-                $user_likes = UserLikes::where('like_from',Auth::id())->where('like_to',$request->id)->first();
-                $user_view = UserView::where('view_from',Auth::id())->where('view_to',$request->id)->first();
+                $user_likes = UserLikes::where('like_from',Auth::id())->where('like_to',$id)->first();
+                $user_view = UserView::where('view_from',Auth::id())->where('view_to',$id)->first();
                 if(empty($user_likes) && empty($user_view)){
-                    UserView::create(['view_from'=>Auth::id(),'view_to'=> $request->id]);
+                    UserView::create(['view_from'=>Auth::id(),'view_to'=> $id]);
+
+                    // Notification for profile view
+
+                    $title = "Your profile has been viewed by ".Auth::user()->name;
+                    $message = "Your profile has been viewed by ".Auth::user()->name; 
+                    Helper::send_notification('single', Auth::id(), $id, $title, 'user_view', $message, []);
                 };
             }
 
@@ -337,6 +343,19 @@ class CustomerController extends BaseController
                 
                 UserLikes::where('like_from',$input['like_to'])->where('like_to',$input['like_from'])->where('status',$input['status'])->update(
                     ['match_id' => $input['match_id'],'match_status' => $input['match_status'],'matched_at' => $input['matched_at']]);
+
+                // Notification for match profile both side
+
+                $title = "Congrats! You have a match with ".Auth::user()->name;
+                $message = "Congrats! You have a match with ".Auth::user()->name; 
+                Helper::send_notification('single', Auth::id(), $input['like_to'], $title, 'match', $message, []);
+
+                // Notification for match profile both side
+
+                $receiver_data = User::where('id',$input['like_to'])->first();
+                $title = "Congrats! You have a match with ". $receiver_data['name'];
+                $message = "Congrats! You have a match with ". $receiver_data['name']; 
+                Helper::send_notification('single', $input['like_to'], Auth::id(), $title, 'match', $message, []);
             }
 
             if(!$same_request){
@@ -354,6 +373,12 @@ class CustomerController extends BaseController
                 UserView::where('view_from',$input['like_to'])->where('view_to',Auth::id())->delete();
                 
                 UserLikes::create($input);
+
+                // Notification for profile like
+
+                $title = "You profile is liked by ".Auth::user()->name;
+                $message = "You profile is liked by ".Auth::user()->name; 
+                Helper::send_notification('single', Auth::id(), $input['like_to'], $title, 'like', $message, []);
             }
 
             return $this->success([],'Profile liked successfully');
@@ -514,7 +539,11 @@ class CustomerController extends BaseController
 
     public function chatList(Request $request){
         try{
-            $chat_list          =   Chat::where('receiver_id',Auth::id())
+            $chat_list          =   Chat::where(function ($query) {
+                                        $query->where('receiver_id', Auth::id())
+                                            ->orWhere('sender_id', Auth::id());
+                                    })
+                                    ->join(DB::raw('(SELECT MAX(id) AS latest_chat_id FROM chats GROUP BY match_id) AS latest_chats'), 'chats.id', '=', 'latest_chats.latest_chat_id')
                                     ->select('chats.id', 'chats.match_id','chats.sender_id','chats.receiver_id','chats.read_status')
                                     ->selectRaw('MAX(chats.message) as last_message')
                                     ->selectRaw('(SELECT COUNT(*) FROM chats AS sub_chats WHERE sub_chats.match_id = chats.match_id AND sub_chats.read_status = 0 AND sub_chats.receiver_id = '.Auth::id().') as unread_message_count')
@@ -523,10 +552,20 @@ class CustomerController extends BaseController
                                     })
                                     ->where('ul.match_status',1) 
                                     ->groupBy('chats.match_id')
+                                    ->orderBy('chats.created_at', 'desc')
                                     ->paginate($request->input('perPage'), ['*'], 'page', $request->input('page'));
 
             $data['chat_list']  =   $chat_list->map(function ($user){
-                                            if($user->users->isNotEmpty()){
+                                            if($user->sender_id == Auth::id() && $user->userReceiver->isNotEmpty()){
+                                                $profile_photo_media = $user->userReceiver->first()->photos->firstWhere('type', 'image'); 
+                                                $user->user_id = $user->userReceiver->first()->id;
+                                                $user->name = $user->userReceiver->first()->first_name.' '.$user->userReceiver->first()->last_name;
+                                                $user->profile_photo = $profile_photo_media->profile_photo;
+                                                $user->unread_message_count = (int)$user->unread_message_count;
+                                                $user->last_message = $user->last_message;
+                                                unset($user->userReceiver);
+                                            }
+                                            if($user->sender_id != Auth::id() && $user->users->isNotEmpty()){
                                                 $profile_photo_media = $user->users->first()->photos->firstWhere('type', 'image'); 
                                                 $user->user_id = $user->users->first()->id;
                                                 $user->name = $user->users->first()->first_name.' '.$user->users->first()->last_name;
@@ -589,6 +628,12 @@ class CustomerController extends BaseController
             $chats->message     = $request->message;
             $chats->save();
 
+            // Notification for message send
+
+            $title = Auth::user()->name." sent you a message";
+            $message = Auth::user()->name." sent you a message"; 
+            Helper::send_notification('single', Auth::id(), $request->receiver_id, $title, 'message', $message, []);
+       
             return $this->success([],'Message send successfully');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
@@ -610,6 +655,23 @@ class CustomerController extends BaseController
             }
 
             UserLikes::where('user_likes.match_id',$request->match_id)->update(['user_likes.match_status' => 0]);
+            
+            $user_data =  UserLikes::where('user_likes.match_id',$request->match_id)->first();
+
+            $notification_receiver_id = 0;
+            if($user_data->like_from != Auth::id()){
+                $notification_receiver_id = $user_data->like_from;
+            }
+
+            if($user_data->like_to != Auth::id()){
+                $notification_receiver_id = $user_data->like_to;
+            } 
+            
+            // Notification for unmatch profile both side
+
+            $title = "You have unmatched with ".Auth::user()->name;
+            $message = "You have unmatched with ".Auth::user()->name; 
+            Helper::send_notification('single', Auth::id(), $notification_receiver_id, $title, 'unmatch', $message, []);
 
             return $this->success([],'Unmatch done successfully');
         }catch(Exception $e){
@@ -916,6 +978,12 @@ class CustomerController extends BaseController
                     'receiver_token'=>$rtcToken1,
                 ];    
 
+                // Notification for video call
+
+                $title = "You have a video call request from ".Auth::user()->name;
+                $message = "You have a video call request from ".Auth::user()->name; 
+                Helper::send_notification('single', Auth::id(), $request->receiver_id, $title, 'video_call', $message, []);
+
                 return $this->success($data,'Video call done');
             }
             return $this->error('Something went wrong','Something went wrong');
@@ -943,6 +1011,27 @@ class CustomerController extends BaseController
             $randomString .= $characters[rand(0, $charactersLength - 1)];
         }
         return $randomString;
+    }
+
+    // FCM TOKEN SET
+
+    public function updateFcmToken(Request $request){
+        try{
+            $validateData = Validator::make($request->all(), [
+                'fcm_token' => 'required',
+            ]);
+
+            if ($validateData->fails()) {
+                return $this->error($validateData->errors(),'Validation error',403);
+            }
+
+            User::where('id',Auth::id())->update(['fcm_token' => $request->fcm_token]);
+           
+            return $this->success([],'Token updated successfully');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
     }
 
     // NOTIFICATION LIST
@@ -1016,9 +1105,10 @@ class CustomerController extends BaseController
     public function logout(){
         try{
             if (Auth::user()) {
+                User::where('id',Auth::id())->update(['fcm_token' => null]);
                 $user = Auth::user()->token();
                 $user->revoke();
-                return $this->success([],'You are succseefully logout');
+                return $this->success([],'You are successfully logout');
             }
             return $this->error('Something went wrong','Something went wrong');
         }catch(Exception $e){

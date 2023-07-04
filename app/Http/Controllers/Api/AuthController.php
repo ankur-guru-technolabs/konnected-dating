@@ -172,7 +172,16 @@ class AuthController extends BaseController
                         }
 
                         if($user->email_verified == 1 && $user->phone_verified = 1 && $user->otp_verified == 1 && $request->type != 'edit'){
+                            $user->tokens()->delete();
                             $data['token'] = $user->createToken('Auth token')->accessToken;
+                        }
+
+                        if($user->email_verified == 1 && $user->phone_verified = 1 && $user->otp_verified == 1 && $request->type == 'register'){
+                            // Notification for welcome
+
+                            $title = "Welcome to Konnected App";
+                            $message = "Welcome to Konnected App"; 
+                            Helper::send_notification('single', 0, $user->id, $title, 'message', $message, []);
                         }
                     } 
                     return $this->success($data,'OTP verified successfully');

@@ -128,6 +128,10 @@ Route::middleware(['admin'])->group(function () {
         Route::post('faq-update', [AdminController::class, 'faqUpdate'])->name('faq-update');
     });
 
+    Route::group(['prefix' => 'notification','as'=>'notification.'], function () {
+        Route::get('index', [AdminController::class, 'notificationIndex'])->name('index');
+        Route::post('send', [AdminController::class, 'notificationSend'])->name('send');
+    });
 });
 
 

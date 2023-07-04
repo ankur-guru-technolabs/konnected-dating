@@ -49,6 +49,7 @@ class User extends Authenticatable
         'phone_verified',
         'otp_verified',
         'is_notification_mute',
+        'fcm_token',
         'password',
     ];
 

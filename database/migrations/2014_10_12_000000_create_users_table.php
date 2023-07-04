@@ -43,6 +43,7 @@ return new class extends Migration
             $table->string('hobbies');
             $table->string('status')->default(0);
             $table->string('is_notification_mute')->default(0);
+            $table->string('fcm_token')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable();
             $table->rememberToken();
