@@ -171,6 +171,7 @@ class CustomerController extends BaseController
                 'hobbies'    => 'required',
                 'photos'     => 'sometimes|required',
                 'photos.*'   => 'sometimes|required|file|mimes:jpeg,png,jpg,mp4,mov,avi|max:100000',
+                'profile_image'                => 'sometimes|file|mimes:jpeg,png,jpg',
                 'thumbnail_image'              => 'sometimes|file|mimes:jpeg,png,jpg',
                 'ice_breaker'                  => 'required|array|min:3',
                 'ice_breaker.*.ice_breaker_id' => 'required',
@@ -289,6 +290,30 @@ class CustomerController extends BaseController
                         $user_photo_data['type'] = 'thumbnail_image';
                     } 
                     $user_photo_data['user_id'] = $user_data->id;
+                    $user_photo_data['name'] = $filename;
+                    UserPhoto::create($user_photo_data);
+                }
+
+                if($request->hasFile('profile_image')){
+
+                    $user_old_profile_name = UserPhoto::where('user_id',$request->user_id)->where('type','profile_image')->pluck('name')->toArray();
+                    $path = public_path('user_profile/' . $user_old_profile_name[0]);
+                    if (File::exists($path)) {
+                        if (!is_writable($path)) {
+                            chmod($path, 0777);
+                        }
+                        File::delete($path);
+                    }
+
+                    $profile_image = $request->file('profile_image');
+                    $extension  = $profile_image->getClientOriginalExtension();
+                    $filename = 'User_'.$user_data->id.'_'.random_int(10000, 99999). '.' . $extension;
+                    $profile_image->move(public_path('user_profile'), $filename);
+
+                    if ($extension == 'jpg' || $extension == 'jpeg' || $extension == 'png') {
+                        $user_photo_data['type'] = 'profile_image';
+                    } 
+                    $user_photo_data['user_id'] = $user_data->id; 
                     $user_photo_data['name'] = $filename;
                     UserPhoto::create($user_photo_data);
                 }
@@ -471,9 +496,9 @@ class CustomerController extends BaseController
             $user_list = $query->select('users.id', 'first_name', 'last_name', 'location', 'job', 'age','live_latitude','live_longitude')->paginate($request->input('perPage'), ['*'], 'page', $request->input('page'));
 
             $data['user_list']  =   $user_list->map(function ($user){
-                                        $profile_photo_media = $user->photos->firstWhere('type', 'image');
+                                        $profile_photo_media = $user->photos->firstWhere('type', 'profile_image');
                                         $user->name = $user->first_name.' '.$user->last_name;
-                                        $user->profile_photo = $profile_photo_media->profile_photo;
+                                        $user->profile_photo = $profile_photo_media->profile_photo ?? null;
                                         $user->age_new  = Age::where('id',$user->age)->pluck('year')->first();
                                         $user->location  = $user->location;
                                         $user->job  = $user->job;
@@ -515,10 +540,10 @@ class CustomerController extends BaseController
 
             $data['matched_user_listing'] = $matched_user_listing->map(function ($user){
                                             if($user->users->isNotEmpty()){
-                                                $profile_photo_media = $user->users->first()->photos->firstWhere('type', 'image'); 
+                                                $profile_photo_media = $user->users->first()->photos->firstWhere('type', 'profile_image'); 
                                                 $user->user_id = $user->users->first()->id;
                                                 $user->name = $user->users->first()->first_name.' '.$user->users->first()->last_name;
-                                                $user->profile_photo = $profile_photo_media->profile_photo;
+                                                $user->profile_photo = $profile_photo_media->profile_photo ?? null;
                                                 unset($user->users);
                                             }
                                             return $user;
@@ -553,23 +578,24 @@ class CustomerController extends BaseController
                                     ->where('ul.match_status',1) 
                                     ->groupBy('chats.match_id')
                                     ->orderBy('chats.created_at', 'desc')
+                                    ->orderBy('chats.id', 'desc')
                                     ->paginate($request->input('perPage'), ['*'], 'page', $request->input('page'));
 
             $data['chat_list']  =   $chat_list->map(function ($user){
                                             if($user->sender_id == Auth::id() && $user->userReceiver->isNotEmpty()){
-                                                $profile_photo_media = $user->userReceiver->first()->photos->firstWhere('type', 'image'); 
+                                                $profile_photo_media = $user->userReceiver->first()->photos->firstWhere('type', 'profile_image'); 
                                                 $user->user_id = $user->userReceiver->first()->id;
                                                 $user->name = $user->userReceiver->first()->first_name.' '.$user->userReceiver->first()->last_name;
-                                                $user->profile_photo = $profile_photo_media->profile_photo;
+                                                $user->profile_photo = $profile_photo_media->profile_photo ?? null;
                                                 $user->unread_message_count = (int)$user->unread_message_count;
                                                 $user->last_message = $user->last_message;
                                                 unset($user->userReceiver);
                                             }
                                             if($user->sender_id != Auth::id() && $user->users->isNotEmpty()){
-                                                $profile_photo_media = $user->users->first()->photos->firstWhere('type', 'image'); 
+                                                $profile_photo_media = $user->users->first()->photos->firstWhere('type', 'profile_image'); 
                                                 $user->user_id = $user->users->first()->id;
                                                 $user->name = $user->users->first()->first_name.' '.$user->users->first()->last_name;
-                                                $user->profile_photo = $profile_photo_media->profile_photo;
+                                                $user->profile_photo = $profile_photo_media->profile_photo ?? null;
                                                 $user->unread_message_count = (int)$user->unread_message_count;
                                                 $user->last_message = $user->last_message;
                                                 unset($user->users);
@@ -775,10 +801,10 @@ class CustomerController extends BaseController
 
             if ($undo_profile_listing[0]) {
                 $data['user_list']  =   collect($undo_profile_listing)->map(function ($user){
-                    $profile_photo_media = $user->usersLikesTo->first()->photos->firstWhere('type', 'image');
+                    $profile_photo_media = $user->usersLikesTo->first()->photos->firstWhere('type', 'profile_image');
                     $user->id = $user->usersLikesTo->first()->id;
                     $user->name = $user->usersLikesTo->first()->first_name . ' ' . $user->usersLikesTo->first()->last_name;
-                    $user->profile_photo = $profile_photo_media->profile_photo;
+                    $user->profile_photo = $profile_photo_media->profile_photo ?? null;
                     $user->age_new  = Age::where('id',$user->usersLikesTo->first()->age)->pluck('year')->first();
                     $user->location  = $user->usersLikesTo->first()->location;
                     $user->job  = $user->usersLikesTo->first()->job;
@@ -806,10 +832,10 @@ class CustomerController extends BaseController
                                         
             $data['user_likes_listing'] = $user_likes_listing->map(function ($user){
                                             if($user->users->isNotEmpty()){
-                                                $profile_photo_media = $user->users->first()->photos->firstWhere('type', 'image');
+                                                $profile_photo_media = $user->users->first()->photos->firstWhere('type', 'profile_image');
                                                 $user->user_id = $user->users->first()->id;
                                                 $user->name = $user->users->first()->first_name.' '.$user->users->first()->last_name;
-                                                $user->profile_photo = $profile_photo_media->profile_photo;
+                                                $user->profile_photo = $profile_photo_media->profile_photo ?? null;
                                                 unset($user->users);
                                             }
                                             return $user;
@@ -864,10 +890,10 @@ class CustomerController extends BaseController
                                         
             $data['user_view_listing'] = $user_view_listing->map(function ($user){
                                             if($user->users->isNotEmpty()){
-                                                $profile_photo_media = $user->users->first()->photos->firstWhere('type', 'image');
+                                                $profile_photo_media = $user->users->first()->photos->firstWhere('type', 'profile_image');
                                                 $user->user_id = $user->users->first()->id;
                                                 $user->name = $user->users->first()->first_name.' '.$user->users->first()->last_name;
-                                                $user->profile_photo = $profile_photo_media->profile_photo;
+                                                $user->profile_photo = $profile_photo_media->profile_photo ?? null;
                                                 unset($user->users);
                                             }
                                             return $user;
@@ -898,10 +924,10 @@ class CustomerController extends BaseController
 
             $data['user_review_later_listing'] = $user_review_later_listing->map(function ($user){
                                                     if($user->users->isNotEmpty()){
-                                                        $profile_photo_media = $user->users->first()->photos->firstWhere('type', 'image');
+                                                        $profile_photo_media = $user->users->first()->photos->firstWhere('type', 'profile_image');
                                                         $user->user_id = $user->users->first()->id;
                                                         $user->name = $user->users->first()->first_name.' '.$user->users->first()->last_name;
-                                                        $user->profile_photo = $profile_photo_media->profile_photo;
+                                                        $user->profile_photo = $profile_photo_media->profile_photo ?? null;
                                                         unset($user->users);
                                                     }
                                                     return $user;
@@ -1052,9 +1078,9 @@ class CustomerController extends BaseController
                 }else{
                     $notification->date = date('d M', strtotime($notification->created_at));
                 }
-                $profile_photo_media = $notification->notificationSender->first()->photos->firstWhere('type', 'image');
+                $profile_photo_media = $notification->notificationSender->first()->photos->firstWhere('type', 'profile_image');
                 $notification->name = $notification->notificationSender->first()->first_name . ' ' . $notification->notificationSender->first()->last_name;
-                $notification->profile_photo = $profile_photo_media->profile_photo;
+                $notification->profile_photo = $profile_photo_media->profile_photo ?? null;
                 unset($notification->notificationSender);
                 
                 return $notification;

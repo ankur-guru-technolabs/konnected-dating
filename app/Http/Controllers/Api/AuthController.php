@@ -264,8 +264,9 @@ class AuthController extends BaseController
                 'faith'      => 'required',
                 'ethnticity' => 'required',
                 'hobbies'    => 'required',
-                'photos'     => 'required|array|min:4',
+                'photos'     => 'required|array|min:3',
                 'photos.*'   => 'required|file|mimes:jpeg,png,jpg,mp4,mov,avi|max:100000', 
+                'profile_image'                => 'required|file|mimes:jpeg,png,jpg',
                 'thumbnail_image'              => 'required|file|mimes:jpeg,png,jpg',
                 'ice_breaker'                  => 'required|array|min:3',
                 'ice_breaker.*.ice_breaker_id' => 'required',
@@ -321,7 +322,7 @@ class AuthController extends BaseController
                         UserPhoto::create($user_photo_data);
                     }
                 }
-                if ($request->hasFile('thumbnail_image')) {
+                if($request->hasFile('thumbnail_image')){
                     $thumbnail_image = $request->file('thumbnail_image');
                     $extension  = $thumbnail_image->getClientOriginalExtension();
                     $filename = 'User_'.$user_data->id.'_'.random_int(10000, 99999). '.' . $extension;
@@ -334,6 +335,21 @@ class AuthController extends BaseController
                     $user_photo_data['name'] = $filename;
                     UserPhoto::create($user_photo_data);
                 }
+
+                if($request->hasFile('profile_image')){
+                    $profile_image = $request->file('profile_image');
+                    $extension  = $profile_image->getClientOriginalExtension();
+                    $filename = 'User_'.$user_data->id.'_'.random_int(10000, 99999). '.' . $extension;
+                    $profile_image->move(public_path('user_profile'), $filename);
+
+                    if ($extension == 'jpg' || $extension == 'jpeg' || $extension == 'png') {
+                        $user_photo_data['type'] = 'profile_image';
+                    } 
+                    $user_photo_data['user_id'] = $user_data->id;
+                    $user_photo_data['name'] = $filename;
+                    UserPhoto::create($user_photo_data);
+                }
+                 
                 $temp         = Temp::where('key',$request->email)->first();
                 if($temp != null){
                     $user_data['otp'] = (int)$temp->value; 
