@@ -13,14 +13,16 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('chats', function (Blueprint $table) {
+        Schema::create('user_coins', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('match_id')->index();
             $table->unsignedBigInteger('sender_id')->index();
             $table->unsignedBigInteger('receiver_id')->index();
-            $table->longText('message');
+            $table->unsignedBigInteger('coin_id')->index()->nullable();
+            $table->string('price')->nullable();
+            $table->string('coins_number');
+            $table->string('message');
             $table->string('type');
-            $table->tinyInteger('read_status')->default(0)->comment('0: unread, 1: read')->index();
+            $table->string('action');
             $table->timestamps();
         });
     }
@@ -32,6 +34,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('chats');
+        Schema::dropIfExists('user_coins');
     }
 };

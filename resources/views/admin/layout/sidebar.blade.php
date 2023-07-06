@@ -190,6 +190,38 @@
                 </div>
             </li>
             <li class="nav-item">
+                <a data-bs-toggle="collapse" href="#coin_menu" class="nav-link text-white {{ isActivePrefix('coin','active') }}" aria-controls="coin_menu" role="button" aria-expanded="{{ isActivePrefix('coin','true') }}">
+                    <i class="material-icons-round opacity-10">monetization_on</i>
+                    <span class="nav-link-text ms-2 ps-1">Coin</span>
+                </a>
+                <div class="collapse {{ isActivePrefix('coin','show') }}" id="coin_menu">
+                    <ul class="nav ">
+                        <li class="nav-item {{isActive('coin.list')}}">
+                            <a class="nav-link text-white {{isActive('coin.list')}}" href="{{route('coin.list')}}">
+                                <i class="material-icons opacity-10">list_alt</i>
+                                <span class="sidenav-normal  ms-2  ps-1">List</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            <!-- <li class="nav-item">
+                <a data-bs-toggle="collapse" href="#gift_menu" class="nav-link text-white {{ isActivePrefix('gift','active') }}" aria-controls="gift_menu" role="button" aria-expanded="{{ isActivePrefix('gift','true') }}">
+                    <i class="material-icons-round opacity-10">redeem</i>
+                    <span class="nav-link-text ms-2 ps-1">Gift</span>
+                </a>
+                <div class="collapse {{ isActivePrefix('gift','show') }}" id="gift_menu">
+                    <ul class="nav ">
+                        <li class="nav-item {{isActive('gift.list')}}">
+                            <a class="nav-link text-white {{isActive('gift.list')}}" href="{{route('gift.list')}}">
+                                <i class="material-icons opacity-10">list_alt</i>
+                                <span class="sidenav-normal  ms-2  ps-1">List</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li> -->
+            <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#notification_menu" class="nav-link text-white {{ isActivePrefix('notification','active') }}" aria-controls="notification_menu" role="button" aria-expanded="{{ isActivePrefix('notification','true') }}">
                     <i class="material-icons-round opacity-10">notifications</i>
                     <span class="nav-link-text ms-2 ps-1">Notifications</span>

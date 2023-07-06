@@ -2,17 +2,20 @@
 
 namespace App\Http\Controllers\Admin;
 
+use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
 use App\Http\Controllers\BaseController;
 use App\Models\Age;
 use App\Models\Bodytype;
 use App\Models\Children;
 use App\Models\ContactSupport;
+use App\Models\Coin;
 use App\Models\Education;
 use App\Models\Ethnicity;
 use App\Models\Faith;
 use App\Models\Faq;
 use App\Models\Gender;
+use App\Models\Gift;
 use App\Models\Height;
 use App\Models\Hobby;
 use App\Models\Industry;
@@ -526,6 +529,118 @@ class AdminController extends BaseController
         Faq::where('id',$request->id)->update($insert_data);
         return redirect()->route('faq.list')->with('message','FAQ updated Successfully'); 
     }
+
+    // COIN
+
+    public function coinList(){
+        $coins = Coin::all();
+        return view('admin.coin.list',compact('coins'));
+    }
+    
+    public function coinStore(Request $request){
+        $coin = new Coin;
+        $coin->coins = $request->coins;
+        $coin->price = $request->price;
+        $coin->save();
+        return redirect()->route('coin.list')->with('message','Coin added Successfully'); 
+    }
+    
+    public function coinUpdate(Request $request){
+        $coin = Coin::find($request->id);
+        if ($coin) {
+            $coin->coins = $request->coins;
+            $coin->price = $request->price;
+            $coin->save();
+        } 
+        return redirect()->route('coin.list')->with('message','Coin updated Successfully'); 
+    }
+    
+    public function coinDelete($id){
+        $coins = Coin::findOrFail($id);
+        $coins->delete();
+        return redirect()->route('coin.list')->with('message','Coin deleted Successfully');
+    }
+
+    // GIFT
+
+    public function giftList(){
+        $gifts = Gift::all();
+        return view('admin.gift.list',compact('gifts'));
+    }
+    
+    public function giftStore(Request $request){
+        $folderPath = public_path().'/gift';
+        if (!is_dir($folderPath)) {
+            mkdir($folderPath, 0777, true);
+        }
+        
+        $filename = '';
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $extension  = $image->getClientOriginalExtension();
+            $filename = 'Gift_'.random_int(10000, 99999). '.' . $extension;
+            $image->move(public_path('gift'), $filename);
+        }
+
+        $gift = new Gift;
+        $gift->image = $filename;
+        $gift->coin = $request->coin;
+        $gift->save();
+        return redirect()->route('gift.list')->with('message','Gift added Successfully'); 
+    }
+    
+    public function giftUpdate(Request $request){
+          
+        $folderPath = public_path().'/gift';
+
+        if (!is_dir($folderPath)) {
+            mkdir($folderPath, 0777, true);
+        }
+
+        $gift = Gift::find($request->id);
+        if ($gift) {
+
+            $filename = $gift->image;
+            if (isset($request->image) && $request->hasFile('image')) {
+                $path = public_path('gift/' . $gift->image);
+               
+                if (File::exists($path)) {
+                    if (!is_writable($path)) {
+                        chmod($path, 0777);
+                    }
+                    File::delete($path);
+                }
+
+                if ($request->hasFile('image')) {
+                    $image = $request->file('image');
+                    $extension  = $image->getClientOriginalExtension();
+                    $filename = 'Gift_'.random_int(10000, 99999). '.' . $extension;
+                    $image->move(public_path('gift'), $filename);
+                }
+            }
+
+            $gift->image = $filename;
+            $gift->coin = $request->coin;
+            $gift->save();
+        } 
+        return redirect()->route('gift.list')->with('message','Gift updated Successfully'); 
+    }
+    
+    public function giftDelete($id){
+        $gifts = Gift::findOrFail($id);
+
+        $path = public_path('gift/' . $gifts->image);         
+        if (File::exists($path)) {
+            if (!is_writable($path)) {
+                chmod($path, 0777);
+            }
+            File::delete($path);
+        }
+
+        $gifts->delete();
+        return redirect()->route('gift.list')->with('message','Gift deleted Successfully');
+    }
+
 
     // NOTIFICATION
 

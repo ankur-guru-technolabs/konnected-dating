@@ -20,6 +20,7 @@
                                     <th>Last Name</th>
                                     <th>Email</th>
                                     <th>Phone no</th>
+                                    <th>Gender</th>
                                     <th>Status</th>
                                 </tr>
                             </thead>
@@ -31,6 +32,7 @@
                                     <td>{{$user->last_name}}</td>
                                     <td>{{$user->email}}</td>
                                     <td>{{$user->phone_no}}</td>
+                                    <td>{{$user->gender_name}}</td>
                                     <td>
                                         <div class="form-switch">
                                             <input class="form-check-input bg-gradient-primary user_status_switch" id="user_status_switch" type="checkbox" role="switch" data-id="{{$user->id}}" @if($user->status == 1) checked @endif>

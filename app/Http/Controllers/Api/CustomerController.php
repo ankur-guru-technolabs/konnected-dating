@@ -10,11 +10,13 @@ use App\Models\Bodytype;
 use App\Models\Chat;
 use App\Models\Children;
 use App\Models\ContactSupport;
+use App\Models\Coin;
 use App\Models\Education;
 use App\Models\Ethnicity;
 use App\Models\Faith;
 use App\Models\Faq;
 use App\Models\Gender;
+use App\Models\Gift;
 use App\Models\Height;
 use App\Models\Hobby;
 use App\Models\Industry;
@@ -24,6 +26,7 @@ use App\Models\Question;
 use App\Models\Salary; 
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\UserCoin;
 use App\Models\UserIceBreaker;
 use App\Models\UserLikes;
 use App\Models\UserPhoto;
@@ -118,8 +121,8 @@ class CustomerController extends BaseController
 
                     // Notification for profile view
 
-                    $title = "Your profile has been viewed by ".Auth::user()->name;
-                    $message = "Your profile has been viewed by ".Auth::user()->name; 
+                    $title = "Your profile has been viewed by ".Auth::user()->full_name;
+                    $message = "Your profile has been viewed by ".Auth::user()->full_name; 
                     Helper::send_notification('single', Auth::id(), $id, $title, 'user_view', $message, []);
                 };
             }
@@ -305,6 +308,8 @@ class CustomerController extends BaseController
                         File::delete($path);
                     }
 
+                    UserPhoto::where('user_id',$request->user_id)->where('type','profile_image')->delete();
+
                     $profile_image = $request->file('profile_image');
                     $extension  = $profile_image->getClientOriginalExtension();
                     $filename = 'User_'.$user_data->id.'_'.random_int(10000, 99999). '.' . $extension;
@@ -371,8 +376,8 @@ class CustomerController extends BaseController
 
                 // Notification for match profile both side
 
-                $title = "Congrats! You have a match with ".Auth::user()->name;
-                $message = "Congrats! You have a match with ".Auth::user()->name; 
+                $title = "Congrats! You have a match with ".Auth::user()->full_name;
+                $message = "Congrats! You have a match with ".Auth::user()->full_name; 
                 Helper::send_notification('single', Auth::id(), $input['like_to'], $title, 'match', $message, []);
 
                 // Notification for match profile both side
@@ -401,8 +406,8 @@ class CustomerController extends BaseController
 
                 // Notification for profile like
 
-                $title = "You profile is liked by ".Auth::user()->name;
-                $message = "You profile is liked by ".Auth::user()->name; 
+                $title = "You profile is liked by ".Auth::user()->full_name;
+                $message = "You profile is liked by ".Auth::user()->full_name; 
                 Helper::send_notification('single', Auth::id(), $input['like_to'], $title, 'like', $message, []);
             }
 
@@ -569,7 +574,7 @@ class CustomerController extends BaseController
                                             ->orWhere('sender_id', Auth::id());
                                     })
                                     ->join(DB::raw('(SELECT MAX(id) AS latest_chat_id FROM chats GROUP BY match_id) AS latest_chats'), 'chats.id', '=', 'latest_chats.latest_chat_id')
-                                    ->select('chats.id', 'chats.match_id','chats.sender_id','chats.receiver_id','chats.read_status')
+                                    ->select('chats.id', 'chats.match_id','chats.sender_id','chats.receiver_id','chats.read_status','chats.type')
                                     ->selectRaw('MAX(chats.message) as last_message')
                                     ->selectRaw('(SELECT COUNT(*) FROM chats AS sub_chats WHERE sub_chats.match_id = chats.match_id AND sub_chats.read_status = 0 AND sub_chats.receiver_id = '.Auth::id().') as unread_message_count')
                                     ->leftJoin('user_likes as ul', function ($join) {
@@ -641,6 +646,8 @@ class CustomerController extends BaseController
                 'match_id' => 'required',
                 'receiver_id' => 'required',
                 'message' => 'required',
+                'type' => 'required',
+                'coins_number' => 'required_if:type,gift',
             ]);
 
             if ($validateData->fails()) {
@@ -652,15 +659,52 @@ class CustomerController extends BaseController
             $chats->sender_id   = Auth::id();
             $chats->receiver_id = $request->receiver_id;
             $chats->message     = $request->message;
+            $chats->type        = $request->type;
             $chats->save();
 
             // Notification for message send
+            $data = [];
+            if($request->type != 'gift'){
+                $title = Auth::user()->full_name." sent you a message";
+                $message = Auth::user()->full_name." sent you a message"; 
+                Helper::send_notification('single', Auth::id(), $request->receiver_id, $title, 'message', $message, []);
+            }else{
 
-            $title = Auth::user()->name." sent you a message";
-            $message = Auth::user()->name." sent you a message"; 
-            Helper::send_notification('single', Auth::id(), $request->receiver_id, $title, 'message', $message, []);
+                $user_coin = new UserCoin();
+                
+                $user_coin->sender_id       = Auth::id();
+                $user_coin->receiver_id     = $request->receiver_id;
+                $user_coin->coins_number    = $request->coins_number;
+                $user_coin->message         = "Received Gift From ". Auth::user()->full_name;
+                $user_coin->type            = 'gift_card_receive';
+                $user_coin->action          = '+'.$request->coins_number;
+                $user_coin->save();
+                
+                $receiver_user = User::select('*', DB::raw('CONCAT(first_name, " ", last_name) AS full_name1'))->where('id',$request->receiver_id)->first();
+                $user_coin = new UserCoin();
+                $user_coin->sender_id       = Auth::id();
+                $user_coin->receiver_id     = $request->receiver_id;
+                $user_coin->coins_number    = $request->coins_number;
+                $user_coin->message         = "Sent Gift To ". $receiver_user->full_name1;
+                $user_coin->type            = 'gift_card_sent';
+                $user_coin->action          = '-'.$request->coins_number;
+                $user_coin->save();
+    
+               
+                $data['total_balance'] = UserCoin::where('receiver_id', Auth::id())
+                                        ->orWhere('sender_id', Auth::id())
+                                        ->whereIn('type', ['purchase_coin', 'gift_card_receive', 'purchase_plan', 'gift_card_sent'])
+                                        ->selectRaw('SUM(CASE WHEN receiver_id = ? AND type IN ("purchase_coin", "gift_card_receive") THEN coins_number ELSE 0 END) 
+                                                    - SUM(CASE WHEN sender_id = ? AND type IN ("purchase_plan", "gift_card_sent") THEN coins_number ELSE 0 END) 
+                                                    AS total_balance', [Auth::id(), Auth::id()])
+                                        ->value('total_balance') ?? 0;
+    
+                $title =  "You have received a gift from ". Auth::user()->full_name;
+                $message =  "You have received a gift from ". Auth::user()->full_name; 
+                Helper::send_notification('single', Auth::id(), $request->receiver_id, $title, 'gift_card_receive', $message, []);
+            }
        
-            return $this->success([],'Message send successfully');
+            return $this->success($data,'Message send successfully');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
         }
@@ -695,8 +739,8 @@ class CustomerController extends BaseController
             
             // Notification for unmatch profile both side
 
-            $title = "You have unmatched with ".Auth::user()->name;
-            $message = "You have unmatched with ".Auth::user()->name; 
+            $title = "You have unmatched with ".Auth::user()->full_name;
+            $message = "You have unmatched with ".Auth::user()->full_name; 
             Helper::send_notification('single', Auth::id(), $notification_receiver_id, $title, 'unmatch', $message, []);
 
             return $this->success([],'Unmatch done successfully');
@@ -1006,8 +1050,8 @@ class CustomerController extends BaseController
 
                 // Notification for video call
 
-                $title = "You have a video call request from ".Auth::user()->name;
-                $message = "You have a video call request from ".Auth::user()->name; 
+                $title = "You have a video call request from ".Auth::user()->full_name;
+                $message = "You have a video call request from ".Auth::user()->full_name; 
                 Helper::send_notification('single', Auth::id(), $request->receiver_id, $title, 'video_call', $message, []);
 
                 return $this->success($data,'Video call done');
@@ -1092,9 +1136,9 @@ class CustomerController extends BaseController
         }
         return $this->error('Something went wrong','Something went wrong');
     }
-  
+    
     // NOTIFICATION READ
-
+    
     public function notificationRead(){
         try{
             Notification::where('receiver_id',Auth::id())->update(['status'=>1]);
@@ -1121,6 +1165,130 @@ class CustomerController extends BaseController
                 $user_data->save();
                 return $this->success([],'Notification enable successfully');
             }
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+    
+    // COIN LIST
+
+    public function coinList(Request $request){
+        try{
+            $data['coin_list']  = Coin::all();
+            $data['total_balance'] = UserCoin::where('receiver_id', Auth::id())
+                                    ->orWhere('sender_id', Auth::id())
+                                    ->whereIn('type', ['purchase_coin', 'gift_card_receive', 'purchase_plan', 'gift_card_sent'])
+                                    ->selectRaw('SUM(CASE WHEN receiver_id = ? AND type IN ("purchase_coin", "gift_card_receive") THEN coins_number ELSE 0 END) 
+                                                - SUM(CASE WHEN sender_id = ? AND type IN ("purchase_plan", "gift_card_sent") THEN coins_number ELSE 0 END) 
+                                                AS total_balance', [Auth::id(), Auth::id()])
+                                    ->value('total_balance') ?? 0;
+                                    
+            return $this->success($data,'Notification data');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+    
+    // COIN PURCHASE
+
+    public function coinPurchase(Request $request){
+        try{
+            $validateData = Validator::make($request->all(), [
+                'coin_id' => 'required',
+            ]);
+
+            if ($validateData->fails()) {
+                return $this->error($validateData->errors(),'Validation error',403);
+            }
+
+            $coin_data = Coin::where('id',$request->coin_id)->first();
+
+            $user_coin = new UserCoin();
+
+            $user_coin->sender_id       = 0;
+            $user_coin->receiver_id     = Auth::id();
+            $user_coin->coin_id         = $request->coin_id;
+            $user_coin->price           = $coin_data->price;
+            $user_coin->coins_number    = $coin_data->coins;
+            $user_coin->message         = $coin_data->coins .' Coins Purchased';
+            $user_coin->type            = 'purchase_coin';
+            $user_coin->action          = '+'.$coin_data->coins;
+            $user_coin->save();
+
+           
+            $data['total_balance'] = UserCoin::where('receiver_id', Auth::id())
+                                    ->orWhere('sender_id', Auth::id())
+                                    ->whereIn('type', ['purchase_coin', 'gift_card_receive', 'purchase_plan', 'gift_card_sent'])
+                                    ->selectRaw('SUM(CASE WHEN receiver_id = ? AND type IN ("purchase_coin", "gift_card_receive") THEN coins_number ELSE 0 END) 
+                                                - SUM(CASE WHEN sender_id = ? AND type IN ("purchase_plan", "gift_card_sent") THEN coins_number ELSE 0 END) 
+                                                AS total_balance', [Auth::id(), Auth::id()])
+                                    ->value('total_balance') ?? 0;
+
+            $title =  $coin_data->coins. " purchased successfully";
+            $message =  $coin_data->coins. " purchased successfully"; 
+            Helper::send_notification('single', 0, Auth::id(), $title, 'coin_purchase', $message, []);
+
+            return $this->success($data,'Coin purchased successfully');
+
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
+    // WALLET HISTORY
+
+    public function walletHistory(Request $request){
+        try{
+            $walletHistory = UserCoin::where(function ($query) {
+                                $query->where('receiver_id', Auth::id())
+                                    ->orWhere(function ($query) {
+                                        $query->where('sender_id', Auth::id())
+                                            ->where('type', '!=', 'gift_card_receive');
+                                    });
+                            })
+                            ->orderBy('user_coins.id', 'desc')
+                            ->paginate($request->input('perPage'), ['*'], 'page', $request->input('page'));
+
+            $data['wallet_history'] = $walletHistory->items();
+            $data['current_page'] = $walletHistory->currentPage();
+            $data['per_page'] = $walletHistory->perPage();
+            $data['total'] = $walletHistory->total();
+            $data['last_page'] = $walletHistory->lastPage();
+
+            $data['total_balance'] = UserCoin::where('receiver_id', Auth::id())
+                                    ->orWhere('sender_id', Auth::id())
+                                    ->whereIn('type', ['purchase_coin', 'gift_card_receive', 'purchase_plan', 'gift_card_sent'])
+                                    ->selectRaw('SUM(CASE WHEN receiver_id = ? AND type IN ("purchase_coin", "gift_card_receive") THEN coins_number ELSE 0 END) 
+                                                - SUM(CASE WHEN sender_id = ? AND type IN ("purchase_plan", "gift_card_sent") THEN coins_number ELSE 0 END) 
+                                                AS total_balance', [Auth::id(), Auth::id()])
+                                    ->value('total_balance') ?? 0;
+                                    
+            return $this->success($data,'Chat list');
+
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+    
+     
+    // GIFT LIST
+
+    public function giftList(Request $request){
+        try{
+            $data['gift_list']     = Gift::all();
+            $data['total_balance'] = UserCoin::where('receiver_id', Auth::id())
+                                    ->orWhere('sender_id', Auth::id())
+                                    ->whereIn('type', ['purchase_coin', 'gift_card_receive', 'purchase_plan', 'gift_card_sent'])
+                                    ->selectRaw('SUM(CASE WHEN receiver_id = ? AND type IN ("purchase_coin", "gift_card_receive") THEN coins_number ELSE 0 END) 
+                                                - SUM(CASE WHEN sender_id = ? AND type IN ("purchase_plan", "gift_card_sent") THEN coins_number ELSE 0 END) 
+                                                AS total_balance', [Auth::id(), Auth::id()])
+                                    ->value('total_balance') ?? 0;
+                                    
+            return $this->success($data,'Gift data');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
         }

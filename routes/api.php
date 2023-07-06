@@ -53,5 +53,9 @@ Route::middleware('auth:api')->group(function () {
     Route::get('get-notification-list', [CustomerController::class,'notificationList'])->name('get-notification-list');
     Route::get('notification-read', [CustomerController::class,'notificationRead'])->name('notification-read');
     Route::get('notification-setting', [CustomerController::class,'notificationSetting'])->name('notification-setting');
+    Route::get('get-coin-list', [CustomerController::class,'coinList'])->name('get-coin-list');
+    Route::post('coin-purchase', [CustomerController::class,'coinPurchase'])->name('coin-purchase');
+    Route::get('wallet-history', [CustomerController::class,'walletHistory'])->name('wallet-history');
+    Route::get('get-gift-list', [CustomerController::class,'giftList'])->name('get-gift-list');
     Route::get('log-out', [CustomerController::class,'logout'])->name('log-out');
 });

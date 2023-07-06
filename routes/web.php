@@ -128,6 +128,20 @@ Route::middleware(['admin'])->group(function () {
         Route::post('faq-update', [AdminController::class, 'faqUpdate'])->name('faq-update');
     });
 
+    Route::group(['prefix' => 'coin','as'=>'coin.'], function () {
+        Route::get('list', [AdminController::class, 'coinList'])->name('list');
+        Route::post('store', [AdminController::class, 'coinStore'])->name('store');
+        Route::post('update', [AdminController::class, 'coinUpdate'])->name('update');
+        Route::get('delete/{id}', [AdminController::class, 'coinDelete'])->name('delete');
+    });
+   
+    Route::group(['prefix' => 'gift','as'=>'gift.'], function () {
+        Route::get('list', [AdminController::class, 'giftList'])->name('list');
+        Route::post('store', [AdminController::class, 'giftStore'])->name('store');
+        Route::post('update', [AdminController::class, 'giftUpdate'])->name('update');
+        Route::get('delete/{id}', [AdminController::class, 'giftDelete'])->name('delete');
+    });
+    
     Route::group(['prefix' => 'notification','as'=>'notification.'], function () {
         Route::get('index', [AdminController::class, 'notificationIndex'])->name('index');
         Route::post('send', [AdminController::class, 'notificationSend'])->name('send');

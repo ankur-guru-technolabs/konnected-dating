@@ -90,6 +90,14 @@ class User extends Authenticatable
         'is_notification_mute'=> 'int', 
     ];
     
+    // FULL NAME
+
+    public function getFullNameAttribute()
+    {
+        return $this->first_name . ' ' . $this->last_name;
+    }
+
+
     // RELATIONSHIPS
 
     public function iceBreakers()

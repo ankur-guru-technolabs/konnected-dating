@@ -13,7 +13,7 @@ class UserController extends BaseController
     //
 
     public function list(){
-        $users = User::where('user_type','user')->get();
+        $users = User::where('user_type','user')->join('genders', 'users.gender', '=', 'genders.id')->select('users.*', 'genders.gender AS gender_name')->get();
         return view('admin.user.list',compact('users'));
     }
     
