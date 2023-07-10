@@ -23,6 +23,7 @@ use App\Models\UserIceBreaker;
 use App\Models\UserPhoto;
 use App\Models\UserQuestion;
 use Illuminate\Http\Request;
+use Laravel\Socialite\Facades\Socialite;
 use Exception;
 use Helper;
 use Validator;
@@ -191,6 +192,39 @@ class AuthController extends BaseController
             $can_not_find = "Sorry we can not find data with this credentials";
             return $this->error($can_not_find,$can_not_find);
 
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
+    // GOOGLE LOGIN OR SIGNUP 
+
+    public function redirectToGoogle()
+    {
+        return Socialite::driver('google')->stateless()->redirect();
+    }
+
+    public function handleGoogleCallback()
+    {
+        try{
+            $user= Socialite::driver('google')->stateless()->user();
+            dd($user);
+            $findUser = User::where('google_id', $user->id)->first();
+            if($findUser){
+                Auth::login($findUser);
+                return redirect('/home');
+            }
+            else{
+                $newUser = User::create([
+                    'name'=>$user->name,
+                    'email'=>$user->email,
+                    'google_id'=>$user->id,
+                    'password'=>encrypt('123456')
+                ]);
+                Auth::login($newUser);
+                return redirect('/home');
+            }
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
         }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\LoginController;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Api\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,6 +21,9 @@ use Illuminate\Support\Facades\Auth;
 
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('/');
 Route::post('/login-admin', [LoginController::class, 'login'])->name('login-admin');
+
+Route::get('authorized/google', [AuthController::class, 'redirectToGoogle']);
+Route::get('authorized/google/callback', [AuthController::class, 'handleGoogleCallback']);
 
 Route::middleware(['admin'])->group(function () {
 
