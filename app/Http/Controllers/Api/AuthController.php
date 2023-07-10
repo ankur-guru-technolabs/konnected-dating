@@ -200,27 +200,28 @@ class AuthController extends BaseController
 
     // GOOGLE LOGIN OR SIGNUP 
 
-    public function redirectToGoogle()
+    public function redirectToProvider(Request $request, $provider)
     {
-        return Socialite::driver('google')->stateless()->redirect();
+        return Socialite::driver($provider)->stateless()->redirect();
     }
 
-    public function handleGoogleCallback()
+    public function handleProviderCallback(Request $request, $provider)
     {
         try{
-            $user= Socialite::driver('google')->stateless()->user();
-
-            $findUser = User::where('google_id', $user->id)->first();
+            $user= Socialite::driver($provider)->stateless()->user();
+            $findUser = User::where($provider.'_id', $user->id)->first();
             if($findUser){
                 $findUser->tokens()->delete();
                 $data['token'] = $findUser->createToken('Auth token')->accessToken;
                 return $this->success($data,'Login successfully');
             }else{
-                $data['first_name']  = $user->user['given_name'];
-                $data['last_name']   = $user->user['family_name'];
-                $data['google_id']   = $user->id;
-                $data['email']       = $user->email;
-                return $this->success($data,'Signup successfully');
+                if($provider == 'google'){
+                    $data['first_name']  = $user->user['given_name'];
+                    $data['last_name']   = $user->user['family_name'];
+                    $data['google_id']   = $user->id;
+                    $data['email']       = $user->email;
+                    return $this->success($data,'Signup successfully');
+                }
             }
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
@@ -234,26 +235,20 @@ class AuthController extends BaseController
     {
         try{
             $validateData = Validator::make($request->all(), [
-                'first_name' => 'required',
-                'last_name' => 'required',
-                'google_id' => 'required',
-                'email' => 'required',
+                'social_id' => 'required',
             ]);
 
             if ($validateData->fails()) {
                 return $this->error($validateData->errors(),'Validation error',403);
             } 
 
-            $findUser = User::where('google_id', $request->google_id)->where('email',$request->email)->first();
+            $findUser = User::where('google_id', $request->social_id)->orWhere('facebook_id',$request->social_id)->first();
             if($findUser){
                 $findUser->tokens()->delete();
                 $data['token'] = $findUser->createToken('Auth token')->accessToken;
                 return $this->success($data,'Login successfully');
             }else{
-                $data['first_name']  = $request->first_name;
-                $data['last_name']   = $request->last_name;
-                $data['google_id']   = $request->google_id;
-                $data['email']       = $request->email;
+                $data['social_id']   = $request->social_id;
                 return $this->success($data,'Signup successfully');
             }
         }catch(Exception $e){

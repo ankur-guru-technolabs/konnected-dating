@@ -28,12 +28,12 @@ Route::get('get-registration-form-data', [AuthController::class, 'getRegistratio
 Route::post('register', [AuthController::class, 'register'])->name('register');
 Route::post('email-exist', [AuthController::class, 'emailExist'])->name('email-exist');
  
-// FOR GOOGLE CURRENTLY THIS IS NOT USED
+// FOR GOOGLE/FACEBOOK CURRENTLY THIS IS NOT USED {google,facebook}
 
-Route::get('auth/google', [AuthController::class,'redirectToGoogle'])->name('google');
-Route::get('auth/google/callback', [AuthController::class,'handleGoogleCallback'])->name('google-callback');
+Route::get('authorized/{provider}', [AuthController::class, 'redirectToProvider']);
+Route::get('authorized/{provider}/callback', [AuthController::class, 'handleProviderCallback']); 
 
-// FOR GOOGLE CURRENTLY THIS IS USED
+// FOR GOOGLE/FACEBOOK CURRENTLY THIS IS USED
 
 Route::post('check-social-user', [AuthController::class,'checkSocailUser'])->name('check-social-login');
 

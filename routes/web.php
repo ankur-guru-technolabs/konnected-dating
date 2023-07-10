@@ -24,8 +24,9 @@ Route::post('/login-admin', [LoginController::class, 'login'])->name('login-admi
 
 // FOR GOOGLE CURRENTLY THIS IS NOT USED
 
-Route::get('authorized/google', [AuthController::class, 'redirectToGoogle']);
-Route::get('authorized/google/callback', [AuthController::class, 'handleGoogleCallback']);
+Route::get('authorized/{provider}', [AuthController::class, 'redirectToProvider']);
+Route::get('authorized/{provider}/callback', [AuthController::class, 'handleProviderCallback']); 
+
 
 Route::middleware(['admin'])->group(function () {
 
