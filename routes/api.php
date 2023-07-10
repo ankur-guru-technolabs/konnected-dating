@@ -28,8 +28,14 @@ Route::get('get-registration-form-data', [AuthController::class, 'getRegistratio
 Route::post('register', [AuthController::class, 'register'])->name('register');
 Route::post('email-exist', [AuthController::class, 'emailExist'])->name('email-exist');
  
+// FOR GOOGLE CURRENTLY THIS IS NOT USED
+
 Route::get('auth/google', [AuthController::class,'redirectToGoogle'])->name('google');
 Route::get('auth/google/callback', [AuthController::class,'handleGoogleCallback'])->name('google-callback');
+
+// FOR GOOGLE CURRENTLY THIS IS USED
+
+Route::post('check-social-user', [AuthController::class,'checkSocailUser'])->name('check-social-login');
 
 Route::middleware('auth:api')->group(function () {
     Route::get('get-user-profile/{id?}', [CustomerController::class,'getProfile'])->name('get-user-profile');

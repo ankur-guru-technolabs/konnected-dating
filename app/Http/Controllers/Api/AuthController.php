@@ -216,10 +216,44 @@ class AuthController extends BaseController
                 $data['token'] = $findUser->createToken('Auth token')->accessToken;
                 return $this->success($data,'Login successfully');
             }else{
-                $data['first_name']  = $user->given_name;
-                $data['last_name']   = $user->family_name;
+                $data['first_name']  = $user->user['given_name'];
+                $data['last_name']   = $user->user['family_name'];
                 $data['google_id']   = $user->id;
                 $data['email']       = $user->email;
+                return $this->success($data,'Signup successfully');
+            }
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+    
+    // CHECK USER EXIST OR NOT 
+
+    public function checkSocailUser(Request $request)
+    {
+        try{
+            $validateData = Validator::make($request->all(), [
+                'first_name' => 'required',
+                'last_name' => 'required',
+                'google_id' => 'required',
+                'email' => 'required',
+            ]);
+
+            if ($validateData->fails()) {
+                return $this->error($validateData->errors(),'Validation error',403);
+            } 
+
+            $findUser = User::where('google_id', $request->google_id)->where('email',$request->email)->first();
+            if($findUser){
+                $findUser->tokens()->delete();
+                $data['token'] = $findUser->createToken('Auth token')->accessToken;
+                return $this->success($data,'Login successfully');
+            }else{
+                $data['first_name']  = $request->first_name;
+                $data['last_name']   = $request->last_name;
+                $data['google_id']   = $request->google_id;
+                $data['email']       = $request->email;
                 return $this->success($data,'Signup successfully');
             }
         }catch(Exception $e){

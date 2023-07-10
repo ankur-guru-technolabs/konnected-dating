@@ -22,6 +22,8 @@ use App\Http\Controllers\Api\AuthController;
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('/');
 Route::post('/login-admin', [LoginController::class, 'login'])->name('login-admin');
 
+// FOR GOOGLE CURRENTLY THIS IS NOT USED
+
 Route::get('authorized/google', [AuthController::class, 'redirectToGoogle']);
 Route::get('authorized/google/callback', [AuthController::class, 'handleGoogleCallback']);
 
