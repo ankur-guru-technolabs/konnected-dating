@@ -209,21 +209,18 @@ class AuthController extends BaseController
     {
         try{
             $user= Socialite::driver('google')->stateless()->user();
-            dd($user);
+
             $findUser = User::where('google_id', $user->id)->first();
             if($findUser){
-                Auth::login($findUser);
-                return redirect('/home');
-            }
-            else{
-                $newUser = User::create([
-                    'name'=>$user->name,
-                    'email'=>$user->email,
-                    'google_id'=>$user->id,
-                    'password'=>encrypt('123456')
-                ]);
-                Auth::login($newUser);
-                return redirect('/home');
+                $findUser->tokens()->delete();
+                $data['token'] = $findUser->createToken('Auth token')->accessToken;
+                return $this->success($data,'Login successfully');
+            }else{
+                $data['first_name']  = $user->given_name;
+                $data['last_name']   = $user->family_name;
+                $data['google_id']   = $user->id;
+                $data['email']       = $user->email;
+                return $this->success($data,'Signup successfully');
             }
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
@@ -318,6 +315,8 @@ class AuthController extends BaseController
             $input                   = $request->all();
             $input['user_type']      = 'user';
             $input['phone_verified'] = 1;
+            $input['google_id']      = isset($request->google_id) ? $request->google_id : null;
+
             $user_data  = User::create($input);
 
             if(isset($user_data->id)){

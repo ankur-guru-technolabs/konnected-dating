@@ -50,6 +50,7 @@ class User extends Authenticatable
         'otp_verified',
         'is_notification_mute',
         'fcm_token',
+        'google_id',
         'password',
     ];
 

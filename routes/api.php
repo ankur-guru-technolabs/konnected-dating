@@ -28,6 +28,9 @@ Route::get('get-registration-form-data', [AuthController::class, 'getRegistratio
 Route::post('register', [AuthController::class, 'register'])->name('register');
 Route::post('email-exist', [AuthController::class, 'emailExist'])->name('email-exist');
  
+Route::get('auth/google', [AuthController::class,'redirectToGoogle'])->name('google');
+Route::get('auth/google/callback', [AuthController::class,'handleGoogleCallback'])->name('google-callback');
+
 Route::middleware('auth:api')->group(function () {
     Route::get('get-user-profile/{id?}', [CustomerController::class,'getProfile'])->name('get-user-profile');
     Route::post('update-user-profile', [CustomerController::class,'updateProfile'])->name('update-user-profile');
