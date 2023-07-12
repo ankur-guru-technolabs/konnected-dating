@@ -258,7 +258,7 @@ class CustomerController extends BaseController
                         };
                     }
                     $userPhotos->delete();
-                    $user_photo_data[] = $this->uploadMediaFiles($mediaFiles, $user_data->id);
+                    $user_photo_data = $this->uploadMediaFiles($mediaFiles, $user_data->id);
                 }
 
                 if (!empty($thumbnailImage)) {
