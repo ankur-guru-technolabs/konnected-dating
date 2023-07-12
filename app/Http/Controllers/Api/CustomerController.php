@@ -234,10 +234,16 @@ class CustomerController extends BaseController
                     mkdir($folderPath, 0777, true);
                 }
 
+                $mediaFiles = $request->file('photos');
+                $thumbnailImage = $request->file('thumbnail_image');
+                $profileImage = $request->file('profile_image');
+                $user_photo_data = [];
+
                 if (isset($request->image) && $request->hasFile('photos')) {
 
-                    $user_old_photo_name = UserPhoto::whereIn('id', $request->image)->where('user_id',$request->user_id)->where('type','!=','thumbnail_image')->pluck('name')->toArray();
-
+                    $userPhotos = UserPhoto::whereIn('id', $request->image)->where('user_id',$request->user_id)->where('type','!=','thumbnail_image');
+                    $user_old_photo_name = $userPhotos->pluck('name')->toArray();
+                    
                     $deletedFiles = [];
                     if(!empty($user_old_photo_name)){
                         foreach ($user_old_photo_name as $name) {
@@ -251,77 +257,21 @@ class CustomerController extends BaseController
                             }
                         };
                     }
-                    UserPhoto::whereIn('id', $request->image)->where('user_id',$request->user_id)->where('type','!=','thumbnail_image')->delete();
-
-                    $photos = $request->file('photos');
-
-                    foreach ($photos as $photo) {
-                        $extension  = $photo->getClientOriginalExtension();
-                        $filename = 'User_'.$user_data->id.'_'.random_int(10000, 99999). '.' . $extension;
-                        $photo->move(public_path('user_profile'), $filename);
-
-                        if ($extension == 'jpg' || $extension == 'jpeg' || $extension == 'png') {
-                            $user_photo_data['type'] = 'image';
-                        } elseif ($extension == 'mp4' || $extension == 'avi' || $extension == 'mov') {
-                            $user_photo_data['type'] = 'video';
-                        } 
-                        $user_photo_data['user_id'] = $user_data->id;
-                        $user_photo_data['name'] = $filename;
-                        UserPhoto::create($user_photo_data);
-                    }
+                    $userPhotos->delete();
+                    $user_photo_data[] = $this->uploadMediaFiles($mediaFiles, $user_data->id);
                 }
 
-                if ($request->hasFile('thumbnail_image')) {
-
-                    $user_old_thumbnail_name = UserPhoto::where('user_id',$request->user_id)->where('type','thumbnail_image')->pluck('name')->toArray();
-                    $path = public_path('user_profile/' . $user_old_thumbnail_name[0]);
-                    if (File::exists($path)) {
-                        if (!is_writable($path)) {
-                            chmod($path, 0777);
-                        }
-                        File::delete($path);
-                    }
-
-                    UserPhoto::where('user_id',$request->user_id)->where('type','thumbnail_image')->delete();
-
-                    $thumbnail_image = $request->file('thumbnail_image');
-                    $extension  = $thumbnail_image->getClientOriginalExtension();
-                    $filename = 'User_'.$user_data->id.'_'.random_int(10000, 99999). '.' . $extension;
-                    $thumbnail_image->move(public_path('user_profile'), $filename);
-
-                    if ($extension == 'jpg' || $extension == 'jpeg' || $extension == 'png') {
-                        $user_photo_data['type'] = 'thumbnail_image';
-                    } 
-                    $user_photo_data['user_id'] = $user_data->id;
-                    $user_photo_data['name'] = $filename;
-                    UserPhoto::create($user_photo_data);
+                if (!empty($thumbnailImage)) {
+                    $this->deleteUserPhotos(null, $request->user_id, 'thumbnail_image');
+                    $user_photo_data[] = $this->uploadImageFile($thumbnailImage, $user_data->id, 'thumbnail_image');
                 }
 
-                if($request->hasFile('profile_image')){
-
-                    $user_old_profile_name = UserPhoto::where('user_id',$request->user_id)->where('type','profile_image')->pluck('name')->toArray();
-                    $path = public_path('user_profile/' . $user_old_profile_name[0]);
-                    if (File::exists($path)) {
-                        if (!is_writable($path)) {
-                            chmod($path, 0777);
-                        }
-                        File::delete($path);
-                    }
-
-                    UserPhoto::where('user_id',$request->user_id)->where('type','profile_image')->delete();
-
-                    $profile_image = $request->file('profile_image');
-                    $extension  = $profile_image->getClientOriginalExtension();
-                    $filename = 'User_'.$user_data->id.'_'.random_int(10000, 99999). '.' . $extension;
-                    $profile_image->move(public_path('user_profile'), $filename);
-
-                    if ($extension == 'jpg' || $extension == 'jpeg' || $extension == 'png') {
-                        $user_photo_data['type'] = 'profile_image';
-                    } 
-                    $user_photo_data['user_id'] = $user_data->id; 
-                    $user_photo_data['name'] = $filename;
-                    UserPhoto::create($user_photo_data);
+                if (!empty($profileImage)) {
+                    $this->deleteUserPhotos(null, $request->user_id, 'profile_image');
+                    $user_photo_data[] = $this->uploadImageFile($profileImage, $user_data->id, 'profile_image');
                 }
+
+                UserPhoto::insert($user_photo_data);
 
                 $user_data->new_email = null;
                 if($user_data->email != $request->email){

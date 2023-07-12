@@ -222,6 +222,9 @@ class AuthController extends BaseController
                     $data['email']       = $user->email;
                     return $this->success($data,'Signup successfully');
                 }
+                if($provider == 'facebook'){
+                    dd($user);
+                }
             }
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
@@ -349,68 +352,54 @@ class AuthController extends BaseController
             $user_data  = User::create($input);
 
             if(isset($user_data->id)){
-
+                
+                $ice_breaker_data_new = [];
                 foreach($input['ice_breaker'] as $ice_breaker_data){
                     $ice_breaker_data['user_id'] = $user_data->id;
-                    UserIceBreaker::create($ice_breaker_data);
+                    $ice_breaker_data['created_at'] = now();
+				    $ice_breaker_data['updated_at'] = now();
+                    $ice_breaker_data_new[] = $ice_breaker_data;
+                    // UserIceBreaker::create($ice_breaker_data);
                 }
-                
+                UserIceBreaker::insert($ice_breaker_data_new);
+            
+                $question_new = [];
                 foreach($input['questions'] as $question){
                     $question['user_id']        = $user_data->id;
                     $question['question_id']    = $question['question_id'];
                     $question['answer_id']      = $question['answer_id'];
-                    UserQuestion::create($question);
+                    $question['created_at'] = now();
+				    $question['updated_at'] = now();
+                    $question_new[] = $question;
+                    // UserQuestion::create($question);
                 }
+                UserQuestion::insert($question_new);
 
                 $folderPath = public_path().'/user_profile';
                 if (!is_dir($folderPath)) {
                     mkdir($folderPath, 0777, true);
                 }
                 
-                if ($request->hasFile('photos')) {
-                    $photos = $request->file('photos');
-                    foreach ($photos as $photo) {
-                        $extension  = $photo->getClientOriginalExtension();
-                        $filename = 'User_'.$user_data->id.'_'.random_int(10000, 99999). '.' . $extension;
-                        $photo->move(public_path('user_profile'), $filename);
+                
+                $mediaFiles = $request->file('photos');
+                $thumbnailImage = $request->file('thumbnail_image');
+                $profileImage = $request->file('profile_image');
 
-                        if ($extension == 'jpg' || $extension == 'jpeg' || $extension == 'png') {
-                            $user_photo_data['type'] = 'image';
-                        } elseif ($extension == 'mp4' || $extension == 'avi' || $extension == 'mov') {
-                            $user_photo_data['type'] = 'video';
-                        } 
-                        $user_photo_data['user_id'] = $user_data->id;
-                        $user_photo_data['name'] = $filename;
-                        UserPhoto::create($user_photo_data);
-                    }
-                }
-                if($request->hasFile('thumbnail_image')){
-                    $thumbnail_image = $request->file('thumbnail_image');
-                    $extension  = $thumbnail_image->getClientOriginalExtension();
-                    $filename = 'User_'.$user_data->id.'_'.random_int(10000, 99999). '.' . $extension;
-                    $thumbnail_image->move(public_path('user_profile'), $filename);
+                $user_photo_data = [];
 
-                    if ($extension == 'jpg' || $extension == 'jpeg' || $extension == 'png') {
-                        $user_photo_data['type'] = 'thumbnail_image';
-                    } 
-                    $user_photo_data['user_id'] = $user_data->id;
-                    $user_photo_data['name'] = $filename;
-                    UserPhoto::create($user_photo_data);
+                if (!empty($mediaFiles)) {
+                    $user_photo_data = $this->uploadMediaFiles($mediaFiles, $user_data->id);
                 }
 
-                if($request->hasFile('profile_image')){
-                    $profile_image = $request->file('profile_image');
-                    $extension  = $profile_image->getClientOriginalExtension();
-                    $filename = 'User_'.$user_data->id.'_'.random_int(10000, 99999). '.' . $extension;
-                    $profile_image->move(public_path('user_profile'), $filename);
-
-                    if ($extension == 'jpg' || $extension == 'jpeg' || $extension == 'png') {
-                        $user_photo_data['type'] = 'profile_image';
-                    } 
-                    $user_photo_data['user_id'] = $user_data->id;
-                    $user_photo_data['name'] = $filename;
-                    UserPhoto::create($user_photo_data);
+                if (!empty($thumbnailImage)) {
+                    $user_photo_data[] = $this->uploadImageFile($thumbnailImage, $user_data->id, 'thumbnail_image');
                 }
+    
+                if (!empty($profileImage)) {
+                    $user_photo_data[] = $this->uploadImageFile($profileImage, $user_data->id, 'profile_image');
+                }
+
+                UserPhoto::insert($user_photo_data);
                  
                 $temp         = Temp::where('key',$request->email)->first();
                 if($temp != null){
