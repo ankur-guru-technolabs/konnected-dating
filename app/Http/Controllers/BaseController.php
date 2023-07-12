@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\UserPhoto;
+use Illuminate\Support\Facades\File;
 
 class BaseController extends Controller
 {
