@@ -23,9 +23,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($feedbacks as $feedback)
+                                @foreach($feedbacks as $key=>$feedback)
                                 <tr>
-                                    <td>{{$feedback->id}}</td>
+                                    <td>{{ ++$key }}</td>
                                     <td>{{$feedback->name}}</td>
                                     <td>{{$feedback->email}}</td>
                                     <td>

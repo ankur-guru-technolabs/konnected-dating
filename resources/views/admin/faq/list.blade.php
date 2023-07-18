@@ -22,9 +22,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($faqs as $faq)
+                                @foreach($faqs as $key=>$faq)
                                     <tr>
-                                        <td>{{$faq->id}}</td>
+                                        <td>{{ ++$key }}</td>
                                         <td>{{$faq->question}}</td>
                                         <td>
                                             <a href="{{route('faq.faq-edit',['id' => $faq->id])}}">

@@ -21,6 +21,10 @@ use App\Http\Controllers\Api\AuthController;
 
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('/');
 Route::post('/login-admin', [LoginController::class, 'login'])->name('login-admin');
+Route::get('privacy-policy', [LoginController::class, 'privacyPolicy'])->name('privacy-policy');
+Route::get('terms-condition', [LoginController::class, 'termsCondition'])->name('terms-condition');
+Route::get('contact', [LoginController::class, 'contactForm'])->name('contact');
+Route::post('contact-us-store', [LoginController::class, 'contactStore'])->name('contact-us-store');
 
 // FOR GOOGLE CURRENTLY THIS IS NOT USED
 
@@ -153,8 +157,14 @@ Route::middleware(['admin'])->group(function () {
         Route::get('index', [AdminController::class, 'notificationIndex'])->name('index');
         Route::post('send', [AdminController::class, 'notificationSend'])->name('send');
     });
+
+    Route::group(['prefix' => 'report','as'=>'report.'], function () {
+        Route::get('list', [AdminController::class, 'reportList'])->name('list');
+        Route::post('user-block', [AdminController::class, 'userBlock'])->name('user-block');
+    });
 });
 
+Route::get('/message-delete', [LoginController::class, 'messageDelete'])->name('cron');
 
 // Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 // Auth::routes();

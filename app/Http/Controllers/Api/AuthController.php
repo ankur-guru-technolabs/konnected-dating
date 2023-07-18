@@ -57,11 +57,15 @@ class AuthController extends BaseController
                     'subject' => 'Email OTP Verification - For Konnected dating',
                 ];
 
-                Helper::sendMail('emails.email_verify', $email_data, $key, '');
-
                 if (User::where('email', '=', $key)->count() > 0) {
+                    if(User::where('email','=', $key)->where('status',0)->count() > 0){
+                        return $this->error('You are inactive','You are inactive');
+                    };
                     $data['is_user_exist'] = 1;
                 }
+
+                Helper::sendMail('emails.email_verify', $email_data, $key, '');
+
                 $data['send_in'] = 'email';
 
             } else if(isset($request->phone_no)){
@@ -77,9 +81,13 @@ class AuthController extends BaseController
                
                 $key             = $request->phone_no;
 
-                if (User::where('phone_no','=', $key)->count() > 0) {
+                if ($user = User::where('phone_no','=', $key)->count() > 0) {
+                    if(User::where('phone_no','=', $key)->where('status',0)->count() > 0){
+                        return $this->error('You are inactive','You are inactive');
+                    };
                     $data['is_user_exist'] = 1;
                 }
+                
                 $data['send_in'] = 'phone_no';
             } else {
                 return $this->error('Please enter email or phone number','Required parameter');

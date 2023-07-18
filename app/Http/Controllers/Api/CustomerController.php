@@ -346,7 +346,16 @@ class CustomerController extends BaseController
                 }
 
                 // Check logged in user viewd opposite user profile and now liking or disliking that user profile then delete
-                UserReviewLater::where('user_review_from',Auth::id())->where('user_review_to',$input['like_to'])->delete();
+                //UserReviewLater::where('user_review_from',Auth::id())->where('user_review_to',$input['like_to'])->delete();
+                 
+                UserReviewLater::where(function ($query) use ($input) {
+                    $query->where('user_review_from', Auth::id())
+                          ->where('user_review_to', $input['like_to']);
+                })->orWhere(function ($query) use ($input) {
+                    $query->where('user_review_to', Auth::id())
+                          ->where('user_review_from', $input['like_to']);
+                })->delete();
+                
                 
                 // Check logged in user's profile viewd by opposite user profile and now logged in user liking or disliking that user profile then delete
                 
@@ -387,6 +396,7 @@ class CustomerController extends BaseController
 
             $query = User::where('users.id', '!=', Auth::id())
                             ->where('user_type', 'user')
+                            ->where('users.status', 1)
                             ->where('gender', $request->gender)
                             ->whereRaw("CAST(age AS UNSIGNED) BETWEEN $request->min_age AND $request->max_age")
                             ->whereRaw("CAST(height AS UNSIGNED) BETWEEN $request->min_height AND $request->max_height");
@@ -524,7 +534,7 @@ class CustomerController extends BaseController
                                             ->orWhere('sender_id', Auth::id());
                                     })
                                     ->join(DB::raw('(SELECT MAX(id) AS latest_chat_id FROM chats GROUP BY match_id) AS latest_chats'), 'chats.id', '=', 'latest_chats.latest_chat_id')
-                                    ->select('chats.id', 'chats.match_id','chats.sender_id','chats.receiver_id','chats.read_status','chats.type')
+                                    ->select('chats.id', 'chats.match_id','chats.sender_id','chats.receiver_id','chats.read_status','chats.type','chats.created_at')
                                     ->selectRaw('MAX(chats.message) as last_message')
                                     ->selectRaw('(SELECT COUNT(*) FROM chats AS sub_chats WHERE sub_chats.match_id = chats.match_id AND sub_chats.read_status = 0 AND sub_chats.receiver_id = '.Auth::id().') as unread_message_count')
                                     ->leftJoin('user_likes as ul', function ($join) {

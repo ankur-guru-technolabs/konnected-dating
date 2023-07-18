@@ -237,6 +237,22 @@
                     </ul>
                 </div>
             </li>
+            <li class="nav-item">
+                <a data-bs-toggle="collapse" href="#report_menu" class="nav-link text-white {{ isActivePrefix('report','active') }}" aria-controls="report_menu" role="button" aria-expanded="{{ isActivePrefix('report','true') }}">
+                    <i class="material-icons-round opacity-10">report</i>
+                    <span class="nav-link-text ms-2 ps-1">Report</span>
+                </a>
+                <div class="collapse {{ isActivePrefix('report','show') }}" id="report_menu">
+                    <ul class="nav ">
+                        <li class="nav-item {{isActive('report.list')}}">
+                            <a class="nav-link text-white {{isActive('report.list')}}" href="{{route('report.list')}}">
+                                <i class="material-icons opacity-10">list_alt</i>
+                                <span class="sidenav-normal  ms-2  ps-1">List</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
         </ul>
     </div>
 </aside>

@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Chat;
 use Illuminate\Http\Request;
+use App\Models\ContactSupport;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Setting;
 use Session;
+use Validator;
 
 class LoginController extends Controller
 {
@@ -37,5 +41,49 @@ class LoginController extends Controller
             'error' => 'The provided credentials do not match our records.',
         ]);
     }
+    
+    public function messageDelete(Request $request){
+        $thirty_day_before = date ('Y-m-d', strtotime ('-30 day'));
+        $user_subscripion = Chat::whereDate('updated_at','<=',$thirty_day_before)->where('read_status',1)->get();
+    }
 
+    public function privacyPolicy(Request $request)
+    {
+        $privacy_policy = Setting::where('key','privacy_policy')->first();
+        return view('privacy_policy',compact('privacy_policy'));
+    }
+
+    public function termsCondition(Request $request)
+    {
+        $terms_condition = Setting::where('key','terms_condition')->first();
+        return view('terms_condition',compact('terms_condition'));
+    }
+
+    public function contactForm(Request $request)
+    { 
+        return view('contact_form');
+    }
+    
+    public function contactStore(Request $request)
+    { 
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'email' => 'required',
+            'description' => 'required',
+        ]);
+
+        
+        if ($validator->fails())
+        {
+            return back()->withInput()->withErrors($validator);
+        }
+       
+        $support                = new ContactSupport();
+        $support->name          = $request->name;
+        $support->email         = $request->email;
+        $support->description   = $request->description;
+        $support->save();
+
+        return redirect()->route('contact')->with('message','Submit Successfully'); 
+    }
 }

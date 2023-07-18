@@ -24,6 +24,8 @@ use App\Models\Question;
 use App\Models\Salary;
 use App\Models\Setting;
 use App\Models\SubQuestion;
+use App\Models\User;
+use App\Models\UserReport;
 use Validator;
 use Helper; 
 use Auth;
@@ -665,5 +667,35 @@ class AdminController extends BaseController
         Helper::send_notification_by_admin($title, $message, []);
 
         return view('admin.notification.index');
+    }
+
+    // REPORT
+
+    public function reportList(){
+        $report = UserReport::with(['reporter:id,first_name,last_name','reportedUser:id,status,first_name,last_name'])->get(); 
+        return view('admin.report.list',compact('report'));
+    }
+
+    public function userBlock(Request $request){
+        try{
+            $userId = $request->input('id');
+            $user = User::find($userId); 
+            if($user){
+                $user->status = $request->status;
+                $user->fcm_token = null;
+                $user->save();
+
+                $tokens = $user->tokens;
+        
+                foreach ($tokens as $token) {
+                    $token->revoke();
+                }
+                return $this->success([],'User block successfully');
+            }
+            return $this->error('User not found','User not found');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
     }
 }

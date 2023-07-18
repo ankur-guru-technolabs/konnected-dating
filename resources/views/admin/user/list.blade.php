@@ -25,9 +25,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($users as $user)
+                                @foreach($users as $key=>$user)
                                 <tr>
-                                    <td>{{$user->id}}</td>
+                                    <td>{{ ++$key }}</td>
                                     <td>{{$user->first_name}}</td>
                                     <td>{{$user->last_name}}</td>
                                     <td>{{$user->email}}</td>
