@@ -192,7 +192,7 @@ class AuthController extends BaseController
 
                             $title = "Welcome to Konnected App";
                             $message = "Welcome to Konnected App"; 
-                            Helper::send_notification('single', 0, $user->id, $title, 'message', $message, []);
+                            Helper::send_notification('single', 0, $user->id, $title, 'welcome', $message, []);
                         }
                     } 
                     return $this->success($data,'OTP verified successfully');
