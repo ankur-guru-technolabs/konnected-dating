@@ -1007,11 +1007,21 @@ class CustomerController extends BaseController
                 $privilegeExpiredTs = $currentTimestamp + $expireTimeInSeconds;
 
                 $rtcToken1 = RtcTokenBuilder::buildTokenWithUserAccount($appID, $appCertificate, $channelName, $userId, $role, $privilegeExpiredTs);
+                $sender_image =  asset('images/konnected-dating.png');
+                $login_user_image_data = UserPhoto::where('user_id',Auth::id())->where('type','profile_image')->first();
+
+                if(!empty($login_user_image_data)){
+                    $sender_image = $login_user_image_data->profile_photo;
+                }
+
                 $data = [
-                    'sender_id'     =>Auth::id(),
-                    'receiver_u_id' =>$userId,
-                    'channel_name'  => $channelName,
-                    'receiver_token'=>$rtcToken1,
+                    'sender_id'     =>  Auth::id(),
+                    'receiver_id'   =>  $request->receiver_id,
+                    'receiver_u_id' =>  $userId,
+                    'channel_name'  =>  $channelName,
+                    'receiver_token'=>  $rtcToken1,
+                    'sender_name'   =>  Auth::user()->full_name,
+                    'sender_image'  =>  $sender_image,
                 ];    
 
                 // Notification for video call
