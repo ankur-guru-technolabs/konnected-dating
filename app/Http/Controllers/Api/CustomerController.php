@@ -732,6 +732,12 @@ class CustomerController extends BaseController
             $user_report->message           = $request->message;
             $user_report->save();
 
+            // Notification for report
+
+            $title = Auth::user()->full_name ." reported your profile";
+            $message = Auth::user()->full_name ." reported your profile"; 
+            Helper::send_notification('single', Auth::id(), $request->reported_user_id, $title, 'report', $message, []);
+
             return $this->success([],'Report done successfully');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
@@ -1012,7 +1018,7 @@ class CustomerController extends BaseController
 
                 $title = "You have a video call request from ".Auth::user()->full_name;
                 $message = "You have a video call request from ".Auth::user()->full_name; 
-                Helper::send_notification('single', Auth::id(), $request->receiver_id, $title, 'video_call', $message, []);
+                Helper::send_notification('single', Auth::id(), $request->receiver_id, $title, 'video_call', $message, $data);
 
                 return $this->success($data,'Video call done');
             }

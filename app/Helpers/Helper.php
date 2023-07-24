@@ -59,7 +59,7 @@ class Helper {
         if (isset($custom['image'])) {
             $image = $custom['image'];
         } else {
-            $image = asset('images/meet-now.png');
+            $image = asset('images/konnected-dating.png');
         }
 
         if (!empty($receiver_data) && $receiver_data->is_notification_mute == 0 && $receiver_data->fcm_token != '') {
