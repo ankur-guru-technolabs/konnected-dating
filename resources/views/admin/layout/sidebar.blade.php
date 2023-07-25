@@ -205,7 +205,7 @@
                     </ul>
                 </div>
             </li>
-            <!-- <li class="nav-item">
+            <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#gift_menu" class="nav-link text-white {{ isActivePrefix('gift','active') }}" aria-controls="gift_menu" role="button" aria-expanded="{{ isActivePrefix('gift','true') }}">
                     <i class="material-icons-round opacity-10">redeem</i>
                     <span class="nav-link-text ms-2 ps-1">Gift</span>
@@ -220,7 +220,7 @@
                         </li>
                     </ul>
                 </div>
-            </li> -->
+            </li>
             <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#notification_menu" class="nav-link text-white {{ isActivePrefix('notification','active') }}" aria-controls="notification_menu" role="button" aria-expanded="{{ isActivePrefix('notification','true') }}">
                     <i class="material-icons-round opacity-10">notifications</i>
