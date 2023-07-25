@@ -995,8 +995,8 @@ class CustomerController extends BaseController
             }
 
             if (Auth::user()) { 
-                $appID =  env("AGORA_APP_ID", "4f6f13fdda8c4d039249274d1b8ac229");
-                $appCertificate = env("AGORA_APP_CERTIFICATE", "a05000ab3f024995b468bbec55fbb7b4");
+                $appID =  env("AGORA_APP_ID", "201681993f2645039a223768fff5001c");
+                $appCertificate = env("AGORA_APP_CERTIFICATE", "dc7c1e49d0cd45cf98cd1b57a8b22daa");
 
                 $channelName = $this->generateRandomChannel(8);
                 $userId = $this->generateRandomUid();
