@@ -25,6 +25,7 @@ use App\Models\Notification;
 use App\Models\Question;
 use App\Models\Salary; 
 use App\Models\Setting;
+use App\Models\Subscription;
 use App\Models\User;
 use App\Models\UserCoin;
 use App\Models\UserIceBreaker;
@@ -42,6 +43,7 @@ use Validator;
 use DB;
 use Laravel\Ui\Presets\React;
 use App\Lib\RtcTokenBuilder;
+use App\Models\UserSubscription;
 
 class CustomerController extends BaseController
 {
@@ -1105,8 +1107,9 @@ class CustomerController extends BaseController
                 }else{
                     $notification->date = date('d M', strtotime($notification->created_at));
                 }
-                $profile_photo_media = $notification->notificationSender->first()->photos->firstWhere('type', 'profile_image');
-                $notification->name = $notification->notificationSender->first()->first_name . ' ' . $notification->notificationSender->first()->last_name;
+                
+                $profile_photo_media =  !empty($notification->notificationSender->first()) ? $notification->notificationSender->first()->photos->firstWhere('type', 'profile_image') : null;
+                $notification->name = !empty($notification->notificationSender->first()) ? $notification->notificationSender->first()->first_name . ' ' . $notification->notificationSender->first()->last_name : 'Admin';
                 $notification->profile_photo = $profile_photo_media->profile_photo ?? null;
                 unset($notification->notificationSender);
                 
@@ -1154,6 +1157,96 @@ class CustomerController extends BaseController
         return $this->error('Something went wrong','Something went wrong');
     }
     
+    // SUBSCRIPTION LISTING
+    
+    public function subscriptionList(Request $request){
+        try{
+            $data['subscription_list'] = Subscription::all();
+            return $this->success($data,'Subscription listing');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+    
+    // PURCHASE SUBSCRIPTION
+    
+    public function purchaseSubscription(Request $request){
+        try{
+            $user_id = Auth::id();
+            $today_date = date('Y-m-d H:i:s');
+            $is_purchased = UserSubscription::where('user_id',$user_id)->where('expire_date','>',$today_date)->first();
+            if($is_purchased === null){
+                $total_balance = UserCoin::where('receiver_id', Auth::id())
+                ->orWhere('sender_id', Auth::id())
+                ->whereIn('type', ['purchase_coin', 'gift_card_receive', 'purchase_plan', 'gift_card_sent'])
+                ->selectRaw('SUM(CASE WHEN receiver_id = ? AND type IN ("purchase_coin", "gift_card_receive") THEN coins_number ELSE 0 END) 
+                            - SUM(CASE WHEN sender_id = ? AND type IN ("purchase_plan", "gift_card_sent") THEN coins_number ELSE 0 END) 
+                            AS total_balance', [Auth::id(), Auth::id()])
+                ->value('total_balance') ?? 0;
+                
+                
+                $plan_data = Subscription::where('id',$request->subscription_id)->first();
+                
+                if($total_balance < $plan_data->coin){
+                    return $this->error("Sorry, but you don't have enough coins to purchase this plan.","Sorry, but you don't have enough coins to purchase this plan.");
+                };
+
+                $user_subscription                  =  new UserSubscription();
+                $user_subscription->user_id         =  $user_id; 
+                $user_subscription->subscription_id =  $plan_data->id; 
+                $user_subscription->expire_date     =  Date('Y-m-d H:i:s', strtotime('+'.$plan_data->plan_duration. 'days')); 
+                $user_subscription->title           =  $plan_data->title; 
+                $user_subscription->coin            =  $plan_data->coin;   
+                $user_subscription->month           =  $plan_data->month; 
+                $user_subscription->plan_duration   =  $plan_data->plan_duration; 
+                $user_subscription->plan_type       =  $plan_data->plan_type; 
+                $user_subscription->save(); 
+
+
+                $user_coin = new UserCoin();
+                $user_coin->sender_id       = Auth::id();
+                $user_coin->receiver_id     = 0;
+                $user_coin->coins_number    = $plan_data->coin;
+                $user_coin->message         = "Purchased ".$plan_data->title;
+                $user_coin->type            = "purchase_plan";
+                $user_coin->action          = '-'. $plan_data->coin;
+                $user_coin->save();
+
+                // Notification for subscription purchase
+
+                $title = $plan_data->title." purchased successfully";
+                $message = $plan_data->title." purchased successfully"; 
+                Helper::send_notification('single', 0, Auth::id(), $title, 'subscription_purchase', $message, []);
+
+                return $this->success([],'Subscription purchased successfully');
+            }
+            return $this->error('You have already purchased plan','You have already purchased plan');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
+    // ACTIVE SUBSCRIPTION LISTING
+    
+    public function activeSubscriptionList(Request $request){
+        try{
+            $user_id = Auth::id();
+            $today_date = date('Y-m-d H:i:s');
+            $is_purchased = UserSubscription::where('user_id',$user_id)->where('expire_date','>',$today_date)->first();
+            if($is_purchased != null){
+                $data= Subscription::where('id',$is_purchased->subscription_id)->first();
+                return $this->success($data,'Active subscription successfully');
+            }
+            return $this->success(null,'You have no active subscription');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
+
     // COIN LIST
 
     public function coinList(Request $request){

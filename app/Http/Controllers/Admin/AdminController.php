@@ -24,8 +24,10 @@ use App\Models\Question;
 use App\Models\Salary;
 use App\Models\Setting;
 use App\Models\SubQuestion;
+use App\Models\Subscription;
 use App\Models\User;
 use App\Models\UserReport;
+use App\Models\UserSubscription;
 use Validator;
 use Helper; 
 use Auth;
@@ -497,6 +499,69 @@ class AdminController extends BaseController
 
         Setting::where('id',$request->id)->update($insert_data);
         return redirect()->route('static-pages.list')->with('message','Page updated Successfully'); 
+    }
+
+    // SUBSCRIPTION
+
+    public function subscriptionOrder(){
+        $orders = UserSubscription::with('user','subscriptionOrder')->get();
+        return view('admin.subscription.order',compact('orders'));
+    }
+    
+    public function subscriptionList(){
+        $subscription = Subscription::all();
+        return view('admin.subscription.list',compact('subscription'));
+    }
+    
+    public function subscriptionEdit($id){
+        $subscription = Subscription::where('id',$id)->first();
+        $subscription['allowed_subscription'] = explode(',',$subscription->search_filters);
+        return view('admin.subscription.edit',compact('subscription'));
+    }
+    
+    public function subscriptionUpdate(Request $request){
+        
+        $validator = Validator::make($request->all(),[
+            'id'=>"required",
+            'title'=>"required",
+            'description'=>"required",
+            'search_filters'=>"required",
+            'like_per_day'=>"required",
+            'video_call'=>"required",
+            'who_like_me'=>"required",
+            'who_view_me'=>"required",
+            'undo_profile' => "required",
+            'read_receipt' => "required",
+            'travel_mode' => "required",
+            'profile_badge' => "required",
+            'coin' => "required",
+            'month'=>"required",
+            'plan_duration'=>"required"
+        ]);
+
+        if ($validator->fails())
+        {
+            return back()->withInput()->withErrors($validator);
+        }
+
+        $input = $request->all();
+        $insert_data['title']             = $input['title'];
+        $insert_data['description']       = $input['description'];
+        $insert_data['search_filters']    = implode(',',$input['search_filters']);
+        $insert_data['like_per_day']      = $input['like_per_day'];
+        $insert_data['video_call']        = $input['video_call'];
+        $insert_data['who_like_me']       = $input['who_like_me'];
+        $insert_data['who_view_me']       = $input['who_view_me'];
+        $insert_data['undo_profile']      = $input['undo_profile'];
+        $insert_data['read_receipt']      = $input['read_receipt'];
+        $insert_data['travel_mode']       = $input['travel_mode'];
+        $insert_data['profile_badge']     = $input['profile_badge'];
+        $insert_data['coin']              = $input['coin'];
+        $insert_data['month']             = $input['month'];
+        $insert_data['plan_duration']     = $input['plan_duration'];
+        
+        Subscription::where('id',$request->id)->update($insert_data);
+        return redirect()->route('subscription.list')->with('message','Subscription updated Successfully'); 
     }
 
     // FAQ

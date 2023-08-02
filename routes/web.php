@@ -133,6 +133,13 @@ Route::middleware(['admin'])->group(function () {
         Route::post('page-update', [AdminController::class, 'pageUpdate'])->name('page-update');
     });
   
+    Route::group(['prefix' => 'subscription','as'=>'subscription.'], function () {
+        Route::get('order', [AdminController::class, 'subscriptionOrder'])->name('order');
+        Route::get('list', [AdminController::class, 'subscriptionList'])->name('list');
+        Route::get('subscription-edit/{id}', [AdminController::class, 'subscriptionEdit'])->name('subscription-edit');
+        Route::post('subscription-update', [AdminController::class, 'subscriptionUpdate'])->name('subscription-update');
+    });
+    
     Route::group(['prefix' => 'faq','as'=>'faq.'], function () {
         Route::get('list', [AdminController::class, 'faqList'])->name('list');
         Route::get('faq-edit/{id}', [AdminController::class, 'faqEdit'])->name('faq-edit');

@@ -174,6 +174,28 @@
                 </div>
             </li>
             <li class="nav-item">
+                <a data-bs-toggle="collapse" href="#subscription_menu" class="nav-link text-white {{ isActivePrefix('subscription','active') }}" aria-controls="subscription_menu" role="button" aria-expanded="{{ isActivePrefix('subscription','true') }}">
+                    <i class="material-icons-round opacity-10">subscriptions</i>
+                    <span class="nav-link-text ms-2 ps-1">Subscription</span>
+                </a>
+                <div class="collapse {{ isActivePrefix('subscription','show') }}" id="subscription_menu">
+                    <ul class="nav ">
+                        <li class="nav-item {{isActive('subscription.list')}}">
+                            <a class="nav-link text-white {{isActive('subscription.list')}}" href="{{route('subscription.list')}}">
+                                <i class="material-icons opacity-10">list_alt</i>
+                                <span class="sidenav-normal  ms-2  ps-1">List</span>
+                            </a>
+                        </li>
+                        <!-- <li class="nav-item {{isActive('subscription.order')}}">
+                            <a class="nav-link text-white {{isActive('subscription.order')}}" href="{{route('subscription.order')}}">
+                                <i class="material-icons opacity-10">list_alt</i>
+                                <span class="sidenav-normal  ms-2  ps-1">Order</span>
+                            </a>
+                        </li> -->
+                    </ul>
+                </div>
+            </li>
+            <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#faq_menu" class="nav-link text-white {{ isActivePrefix('faq','active') }}" aria-controls="faq_menu" role="button" aria-expanded="{{ isActivePrefix('faq','true') }}">
                     <i class="material-icons-round opacity-10">quiz</i>
                     <span class="nav-link-text ms-2 ps-1">FAQ</span>
