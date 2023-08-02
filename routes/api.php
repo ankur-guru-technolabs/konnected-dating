@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Admin\AdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -70,4 +71,13 @@ Route::middleware('auth:api')->group(function () {
     Route::get('wallet-history', [CustomerController::class,'walletHistory'])->name('wallet-history');
     Route::get('get-gift-list', [CustomerController::class,'giftList'])->name('get-gift-list');
     Route::get('log-out', [CustomerController::class,'logout'])->name('log-out');
+    
+    // Admin
+    
+    Route::get('image-list', [AdminController::class, 'imageList'])->name('image-list');
+    Route::post('image-store', [AdminController::class,'imageStore'])->name('image-store');
+    Route::get('image-detail/{id}', [AdminController::class, 'imageDetail'])->name('image-detail');
+    Route::post('image-update', [AdminController::class,'imageUpdate'])->name('image-update');
+    Route::get('image-delete/{id}', [AdminController::class, 'imageDelete'])->name('image-delete');
+
 });
