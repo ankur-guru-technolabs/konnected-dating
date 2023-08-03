@@ -8,8 +8,10 @@ use Illuminate\Http\Request;
 use App\Models\ContactSupport;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Setting;
+use App\Models\UserSubscription;
 use Session;
 use Validator;
+use Helper;
 
 class LoginController extends Controller
 {
@@ -40,6 +42,22 @@ class LoginController extends Controller
         return back()->withErrors([
             'error' => 'The provided credentials do not match our records.',
         ]);
+    }
+
+    public function subscriptionExpire(Request $request){
+        $three_day_after_date = date ('Y-m-d', strtotime ('+3 day'));
+        $user_subscripion = UserSubscription::with('user:id,first_name,last_name,email')->whereDate('expire_date',$three_day_after_date)->select('id','user_id')->get();
+        foreach($user_subscripion as $users){
+            $key          = $users->user->email;
+            $name         = $users->user->full_name;
+            $email_data   = [
+                'name'                => $name,
+                'email'               => $key,
+                'subscription_expire' => 'subscription_expire',
+                'subject'             => 'Konnected dating subscription expire',
+            ];
+            Helper::sendMail('emails.subscription_expire', $email_data, $key, '');
+        }
     }
     
     public function messageDelete(Request $request){

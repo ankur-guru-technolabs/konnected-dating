@@ -3,6 +3,7 @@
 namespace App\Helpers;
 use Mail;
 use App\Mail\EmailVerificationMail;
+use App\Mail\SubscriptionExpireMail;
 use App\Models\Notification;
 use App\Models\User;
 
@@ -30,6 +31,8 @@ class Helper {
         if(isset($data['otp'])){
             $otp = $data['otp'] ;
             Mail::to($data['email'])->send(new EmailVerificationMail($otp));
+        }elseif (isset($data['subscription_expire'])) {
+            Mail::to($data['email'])->send(new SubscriptionExpireMail($data));
         }
         
         return true;

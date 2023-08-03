@@ -186,12 +186,12 @@
                                 <span class="sidenav-normal  ms-2  ps-1">List</span>
                             </a>
                         </li>
-                        <!-- <li class="nav-item {{isActive('subscription.order')}}">
+                        <li class="nav-item {{isActive('subscription.order')}}">
                             <a class="nav-link text-white {{isActive('subscription.order')}}" href="{{route('subscription.order')}}">
                                 <i class="material-icons opacity-10">list_alt</i>
                                 <span class="sidenav-normal  ms-2  ps-1">Order</span>
                             </a>
-                        </li> -->
+                        </li>
                     </ul>
                 </div>
             </li>
