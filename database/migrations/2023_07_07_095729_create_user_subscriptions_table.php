@@ -19,6 +19,16 @@ return new class extends Migration
             $table->unsignedBigInteger('subscription_id')->index();
             $table->string('expire_date')->nullable();
             $table->string('title');
+            $table->text('description')->nullable();
+            $table->text('search_filters')->nullable();
+            $table->integer('like_per_day')->nullable();
+            $table->string('video_call')->nullable();
+            $table->string('who_like_me');
+            $table->string('who_view_me');
+            $table->string('undo_profile')->nullable();
+            $table->string('read_receipt')->nullable();
+            $table->string('travel_mode')->nullable();
+            $table->string('profile_badge')->nullable();
             $table->string('coin');
             $table->string('currency_code');
             $table->integer('month');

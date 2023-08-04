@@ -135,6 +135,37 @@ class CustomerController extends BaseController
         }
         return $this->error('Something went wrong','Something went wrong');
     }
+   
+    // GET LOGGED IN USER PLAN
+
+    public function getUserPlan(Request $request){
+        try{
+            $today_date = date('Y-m-d H:i:s');
+
+            $plan_data           = UserSubscription::where('user_id',Auth::user()->id)->where('expire_date','>',$today_date)->first();
+            if($plan_data == null){
+                $plan_data         = Subscription::where('plan_type',"free")->first();
+                $data['plan_id']   = $plan_data->id;
+                $data['plan_type'] = 'free';
+            }else{
+                $data['plan_id']     = $plan_data->subscription_id;
+                $data['plan_type']   = 'paid';
+            }
+            $data['search_filters'] = explode(',',$plan_data->search_filters);
+            $data['like_per_day']   = $plan_data->like_per_day;
+            $data['video_call']     = $plan_data->video_call;
+            $data['who_like_me']    = $plan_data->who_like_me;
+            $data['who_view_me']    = $plan_data->who_view_me;
+            $data['undo_profile']   = (int)$plan_data->undo_profile;
+            $data['read_receipt']   = $plan_data->read_receipt;
+            $data['travel_mode']    = $plan_data->travel_mode;
+            $data['profile_badge']  = $plan_data->profile_badge;
+            return $this->success($data,'User profile plan data');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
 
     // UPDATE USER PROFILE
 
@@ -303,6 +334,16 @@ class CustomerController extends BaseController
             if ($validateData->fails()) {
                 return $this->error($validateData->errors(),'Validation error',403);
             }
+
+            $user_id          = Auth::id();
+            $today_date       = date('Y-m-d H:i:s');
+            $plan_data        = UserSubscription::where('user_id',$user_id)->where('expire_date','>',$today_date)->first();
+            if($plan_data == null){
+                $plan_data         = Subscription::where('plan_type',"free")->first();
+            }
+            $today_like_count = UserLikes::where('like_from',$user_id)->whereDate('created_at', date('Y-m-d'))->count();
+            $data['remaining_likes'] = (int)$plan_data->like_per_day - $today_like_count - 1;
+            
             $input              = $request->all();
             $input['like_from'] = Auth::id();
             $input['status']    = (strtolower($input['status']) == 'like') ? 1 : 0;
@@ -372,7 +413,7 @@ class CustomerController extends BaseController
                 Helper::send_notification('single', Auth::id(), $input['like_to'], $title, 'like', $message, []);
             }
 
-            return $this->success([],'Profile liked successfully');
+            return $this->success($data,'Profile liked successfully');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
         }
@@ -823,7 +864,24 @@ class CustomerController extends BaseController
                     unset($user->usersLikesTo);
                     return $user;
                 });
+                
                 UserLikes::where('user_likes.like_from',Auth::id())->where('user_likes.match_status',2)->latest()->first()->delete();
+
+                $user_id          = Auth::id();
+                $today_date       = date('Y-m-d H:i:s');
+                $plan_data        = UserSubscription::where('user_id',$user_id)->where('expire_date','>',$today_date)->first();
+                if($plan_data == null){
+                    $plan_data         = Subscription::where('plan_type',"free")->first();
+                } 
+                $user = User::where('id',Auth::id())->first();
+                if($user->undo_remaining_count !== null && $user->last_undo_date == date('Y-m-d')){
+                    $data['remaining_undo'] = $user->undo_remaining_count - 1;
+                }else{
+                    $data['remaining_undo'] = (int)$plan_data->undo_profile - 1;
+                }
+                $user->undo_remaining_count = $data['remaining_undo'] ;
+                $user->last_undo_date = date('Y-m-d');
+                $user->save();
             }
             return $this->success($data,'Undo profile data');
         }catch(Exception $e){
@@ -1197,6 +1255,16 @@ class CustomerController extends BaseController
                 $user_subscription->subscription_id =  $plan_data->id; 
                 $user_subscription->expire_date     =  Date('Y-m-d H:i:s', strtotime('+'.$plan_data->plan_duration. 'days')); 
                 $user_subscription->title           =  $plan_data->title; 
+                $user_subscription->description     =  $plan_data->description;
+                $user_subscription->search_filters  =  $plan_data->search_filters;
+                $user_subscription->like_per_day    =  $plan_data->like_per_day;
+                $user_subscription->video_call      =  $plan_data->video_call;
+                $user_subscription->who_like_me     =  $plan_data->who_like_me;
+                $user_subscription->who_view_me     =  $plan_data->who_view_me;
+                $user_subscription->undo_profile    =  $plan_data->undo_profile;
+                $user_subscription->read_receipt    =  $plan_data->read_receipt;
+                $user_subscription->travel_mode     =  $plan_data->travel_mode;
+                $user_subscription->profile_badge   =  $plan_data->profile_badge;
                 $user_subscription->coin            =  $plan_data->coin;   
                 $user_subscription->month           =  $plan_data->month; 
                 $user_subscription->plan_duration   =  $plan_data->plan_duration; 
@@ -1219,7 +1287,16 @@ class CustomerController extends BaseController
                 $message = $plan_data->title." purchased successfully"; 
                 Helper::send_notification('single', 0, Auth::id(), $title, 'subscription_purchase', $message, []);
 
-                return $this->success([],'Subscription purchased successfully');
+                $data['search_filters'] = explode(',',$plan_data->search_filters);
+                $data['like_per_day']   = $plan_data->like_per_day;
+                $data['video_call']     = $plan_data->video_call;
+                $data['who_like_me']    = $plan_data->who_like_me;
+                $data['who_view_me']    = $plan_data->who_view_me;
+                $data['undo_profile']   = (int)$plan_data->undo_profile;
+                $data['read_receipt']   = $plan_data->read_receipt;
+                $data['travel_mode']    = $plan_data->travel_mode;
+                $data['profile_badge']  = $plan_data->profile_badge;
+                return $this->success($data,'Subscription purchased successfully');
             }
             return $this->error('You have already purchased plan','You have already purchased plan');
         }catch(Exception $e){

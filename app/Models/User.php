@@ -44,6 +44,8 @@ class User extends Authenticatable
         'faith',
         'ethnticity',
         'hobbies',
+        'undo_remaining_count',
+        'last_undo_date',
         'status',
         'email_verified',
         'phone_verified',

@@ -39,6 +39,7 @@ Route::post('check-social-user', [AuthController::class,'checkSocailUser'])->nam
 
 Route::middleware('auth:api')->group(function () {
     Route::get('get-user-profile/{id?}', [CustomerController::class,'getProfile'])->name('get-user-profile');
+    Route::get('get-user-plan', [CustomerController::class,'getUserPlan'])->name('get-user-plan');
     Route::post('update-user-profile', [CustomerController::class,'updateProfile'])->name('update-user-profile');
     Route::post('swipe-profile', [CustomerController::class,'swipeProfile'])->name('swipe-profile');
     Route::post('discover-profile', [CustomerController::class,'discoverProfile'])->name('discover-profile');
