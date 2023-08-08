@@ -145,10 +145,10 @@ class CustomerController extends BaseController
             $plan_data           = UserSubscription::where('user_id',Auth::user()->id)->where('expire_date','>',$today_date)->first();
             if($plan_data == null){
                 $plan_data         = Subscription::where('plan_type',"free")->first();
-                $data['plan_id']   = $plan_data->id;
+                $data['plan_id']   = (int)$plan_data->id;
                 $data['plan_type'] = 'free';
             }else{
-                $data['plan_id']     = $plan_data->subscription_id;
+                $data['plan_id']     = (int)$plan_data->subscription_id;
                 $data['plan_type']   = 'paid';
             }
             $data['search_filters'] = explode(',',$plan_data->search_filters);
@@ -1287,6 +1287,8 @@ class CustomerController extends BaseController
                 $message = $plan_data->title." purchased successfully"; 
                 Helper::send_notification('single', 0, Auth::id(), $title, 'subscription_purchase', $message, []);
 
+                $data['plan_id']         = $plan_data->id;
+                $data['plan_type']       = $plan_data->plan_type;
                 $data['search_filters'] = explode(',',$plan_data->search_filters);
                 $data['like_per_day']   = $plan_data->like_per_day;
                 $data['video_call']     = $plan_data->video_call;
@@ -1314,9 +1316,10 @@ class CustomerController extends BaseController
             $is_purchased = UserSubscription::where('user_id',$user_id)->where('expire_date','>',$today_date)->first();
             if($is_purchased != null){
                 $data= Subscription::where('id',$is_purchased->subscription_id)->first();
-                return $this->success($data,'Active subscription successfully');
+            }else{
+                $data= Subscription::where('plan_type','free')->first();
             }
-            return $this->success(null,'You have no active subscription');
+            return $this->success($data,'Active subscription successfully');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
         }
