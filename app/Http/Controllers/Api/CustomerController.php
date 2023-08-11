@@ -665,12 +665,25 @@ class CustomerController extends BaseController
             $chats->type        = $request->type;
             $chats->save();
 
+            $sender_image =  asset('images/konnected-dating.png');
+            $login_user_image_data = UserPhoto::where('user_id',Auth::id())->where('type','profile_image')->first();
+
+            if(!empty($login_user_image_data)){
+                $sender_image = $login_user_image_data->profile_photo;
+            }
+            $custom = [
+                'sender_id'     =>  Auth::id(),
+                'match_id'      =>  $request->match_id,
+                'sender_name'   =>  Auth::user()->full_name,
+                'sender_image'  =>  $sender_image,
+            ]; 
+               
             // Notification for message send
             $data = [];
             if($request->type != 'gift'){
                 $title = Auth::user()->full_name." sent you a message";
                 $message = Auth::user()->full_name." sent you a message"; 
-                Helper::send_notification('single', Auth::id(), $request->receiver_id, $title, 'message', $message, []);
+                Helper::send_notification('single', Auth::id(), $request->receiver_id, $title, 'message', $message, $custom);
             }else{
 
                 $user_coin = new UserCoin();
@@ -704,7 +717,7 @@ class CustomerController extends BaseController
     
                 $title =  "You have received a gift from ". Auth::user()->full_name;
                 $message =  "You have received a gift from ". Auth::user()->full_name; 
-                Helper::send_notification('single', Auth::id(), $request->receiver_id, $title, 'gift_card_receive', $message, []);
+                Helper::send_notification('single', Auth::id(), $request->receiver_id, $title, 'gift_card_receive', $message, $custom);
             }
        
             return $this->success($data,'Message send successfully');
