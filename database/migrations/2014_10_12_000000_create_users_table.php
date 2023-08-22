@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('phone_no')->unique();
             $table->string('location');
+            $table->string('city')->nullable();
             $table->string('latitude');
             $table->string('longitude');
             $table->string('job');

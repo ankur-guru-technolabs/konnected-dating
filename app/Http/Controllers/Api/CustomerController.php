@@ -151,8 +151,18 @@ class CustomerController extends BaseController
                 $data['plan_id']     = (int)$plan_data->subscription_id;
                 $data['plan_type']   = 'paid';
             }
+            $today_like_count       = UserLikes::where('like_from',Auth::user()->id)->whereDate('created_at', date('Y-m-d'))->count();
+            $last_undo_date         = Auth::user()->last_undo_date;
+            $undo_remaining_count   = Auth::user()->undo_remaining_count;
+
+            if(date('Y-m-d') == $last_undo_date){
+                $data['undo_remaining_count'] = (int)$undo_remaining_count;
+            }else{
+                $data['undo_remaining_count'] = (int)$plan_data->undo_profile;
+            }
             $data['search_filters'] = explode(',',$plan_data->search_filters);
             $data['like_per_day']   = $plan_data->like_per_day;
+            $data['remaining_likes'] = (int)$plan_data->like_per_day - $today_like_count;
             $data['video_call']     = $plan_data->video_call;
             $data['who_like_me']    = $plan_data->who_like_me;
             $data['who_view_me']    = $plan_data->who_view_me;
@@ -189,6 +199,7 @@ class CustomerController extends BaseController
                 'email'      => 'required|email|max:255|unique:users,email,'.$request->user_id,
                 // 'phone_no'   => 'required|string|unique:users,phone_no|max:20',
                 'location'   => 'required|string|max:255',
+                'city'       => 'required|string|max:255',
                 'latitude'   => 'required|numeric',
                 'longitude'  => 'required|numeric',
                 'job'        => 'required|string|max:255',
@@ -443,6 +454,10 @@ class CustomerController extends BaseController
                             ->where('gender', $request->gender)
                             ->whereRaw("CAST(age AS UNSIGNED) BETWEEN $request->min_age AND $request->max_age")
                             ->whereRaw("CAST(height AS UNSIGNED) BETWEEN $request->min_height AND $request->max_height");
+
+                            if($request->has('city')){                                        
+                                $query->where('city', $request->city);
+                            } 
 
                             if ($request->has('education')) {
                                 $query->where('education', $request->education);
@@ -1137,6 +1152,42 @@ class CustomerController extends BaseController
             $randomString .= $characters[rand(0, $charactersLength - 1)];
         }
         return $randomString;
+    }
+
+    public function declineVideoCall(Request $request)
+    {
+        try
+        {
+            $validateData = Validator::make($request->all(),[
+                'sender_id'  => 'required',
+                'receiver_id'  => 'required',
+            ]);
+    
+            if ($validateData->fails()) {
+                return $this->error($validateData->errors(),'Validation error',403);
+            }
+
+            $user = User::where('id',$request->receiver_id)->first();
+
+            $receiver_img = UserPhoto::where('user_id',$request->receiver_id)->where('type','image')->first();
+            if(!empty($receiver_img)){
+                $receiver_image = $receiver_img->profile_photo;
+            }
+            $data = [
+                'sender_id'     =>  $request->sender_id, 
+                'receiver_id'   =>  $request->receiver_id, 
+                'receiver_image'  =>  $receiver_image,           
+            ];    
+            
+            $title = "Video call is decline by ".$user->full_name;
+            $message = "Video call is decline by ".$user->full_name; 
+
+            Helper::send_notification('single', $request->receiver_id, $request->sender_id, $title, 'end_video_call', $message, $data);
+            return $this->success([],'Video call declined');
+        }
+        catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur!');
+        }
     }
 
     // FCM TOKEN SET
