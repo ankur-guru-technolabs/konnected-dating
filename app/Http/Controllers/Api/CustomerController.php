@@ -44,6 +44,7 @@ use DB;
 use Laravel\Ui\Presets\React;
 use App\Lib\RtcTokenBuilder;
 use App\Models\UserSubscription;
+use Carbon\Carbon;
 
 class CustomerController extends BaseController
 {
@@ -147,19 +148,23 @@ class CustomerController extends BaseController
                 $plan_data         = Subscription::where('plan_type',"free")->first();
                 $data['plan_id']   = (int)$plan_data->id;
                 $data['plan_type'] = 'free';
+                $undoCount = $plan_data->undo_profile;
             }else{
                 $data['plan_id']     = (int)$plan_data->subscription_id;
                 $data['plan_type']   = 'paid';
+                $undoCount = $plan_data->undo_profile;
             }
+            $remainingUndoCount     = $this->remainingUndoCount(Auth::id(), $undoCount);
             $today_like_count       = UserLikes::where('like_from',Auth::user()->id)->whereDate('created_at', date('Y-m-d'))->count();
             $last_undo_date         = Auth::user()->last_undo_date;
-            $undo_remaining_count   = Auth::user()->undo_remaining_count;
+            // $undo_remaining_count   = Auth::user()->undo_remaining_count;
 
-            if(date('Y-m-d') == $last_undo_date){
-                $data['undo_remaining_count'] = (int)$undo_remaining_count;
-            }else{
-                $data['undo_remaining_count'] = (int)$plan_data->undo_profile;
-            }
+            // if(date('Y-m-d') == $last_undo_date){
+            //     $data['undo_remaining_count'] = (int)$undo_remaining_count;
+            // }else{
+            //     $data['undo_remaining_count'] = (int)$plan_data->undo_profile;
+            // }
+            $data['remaining_undo_count'] = $remainingUndoCount;
             $data['search_filters'] = explode(',',$plan_data->search_filters);
             $data['like_per_day']   = $plan_data->like_per_day;
             $data['remaining_likes'] = (int)$plan_data->like_per_day - $today_like_count;
@@ -175,6 +180,25 @@ class CustomerController extends BaseController
             return $this->error($e->getMessage(),'Exception occur');
         }
         return $this->error('Something went wrong','Something went wrong');
+    }
+
+    public function remainingUndoCount($userId, $undoCount)
+    {    
+        $undoRemainingCount = Auth::user()->undo_remaining_count;
+        $lastUndoDate = Auth::user()->last_undo_date;
+        $currentDate = Carbon::now()->format('Y-m-d'); 
+    
+        // Check if it's a new day
+        if ($lastUndoDate < $currentDate){
+            $user = User::find($userId);
+            $user->last_undo_date = $currentDate;
+            $user->undo_remaining_count = $undoCount;
+            $user->save();
+            $remainingUndoCount = $user->undo_remaining_count;
+        }else{     
+            $remainingUndoCount = Auth::user()->undo_remaining_count;
+        }
+        return (int)$remainingUndoCount;
     }
 
     // UPDATE USER PROFILE
