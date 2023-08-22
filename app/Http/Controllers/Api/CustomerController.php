@@ -1183,29 +1183,29 @@ class CustomerController extends BaseController
         try
         {
             $validateData = Validator::make($request->all(),[
-                'sender_id'  => 'required',
+                'receiver_id'  => 'required',
             ]);
     
             if ($validateData->fails()) {
                 return $this->error($validateData->errors(),'Validation error',403);
             }
 
-            $user = User::where('id',$request->receiver_id)->first();
+            $user = User::where('id',Auth::id())->first();
 
-            $receiver_img = UserPhoto::where('user_id',$request->receiver_id)->where('type','image')->first();
+            $receiver_img = UserPhoto::where('user_id',Auth::id())->where('type','image')->first();
             if(!empty($receiver_img)){
                 $receiver_image = $receiver_img->profile_photo;
             }
             $data = [
-                'sender_id'     =>  $request->sender_id, 
-                'receiver_id'   =>  Auth::id(), 
+                'sender_id'     =>  Auth::id(), 
+                'receiver_id'   =>  $request->receiver_id, 
                 'receiver_image'  =>  $receiver_image,           
             ];    
             
             $title = "Video call is decline by ".$user->full_name;
             $message = "Video call is decline by ".$user->full_name; 
 
-            Helper::send_notification('single', $request->receiver_id, $request->sender_id, $title, 'end_video_call', $message, $data);
+            Helper::send_notification('single', Auth::id(), $request->receiver_id, $title, 'end_video_call', $message, $data);
             return $this->success([],'Video call declined');
         }
         catch(Exception $e){
