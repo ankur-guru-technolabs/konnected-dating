@@ -1184,7 +1184,6 @@ class CustomerController extends BaseController
         {
             $validateData = Validator::make($request->all(),[
                 'sender_id'  => 'required',
-                'receiver_id'  => 'required',
             ]);
     
             if ($validateData->fails()) {
@@ -1199,7 +1198,7 @@ class CustomerController extends BaseController
             }
             $data = [
                 'sender_id'     =>  $request->sender_id, 
-                'receiver_id'   =>  $request->receiver_id, 
+                'receiver_id'   =>  Auth::id(), 
                 'receiver_image'  =>  $receiver_image,           
             ];    
             
