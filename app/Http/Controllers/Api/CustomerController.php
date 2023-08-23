@@ -164,10 +164,13 @@ class CustomerController extends BaseController
             // }else{
             //     $data['undo_remaining_count'] = (int)$plan_data->undo_profile;
             // }
+            $data['remaining_likes'] = (int)$plan_data->like_per_day - $today_like_count;
+            if($remainingUndoCount < $undoCount){
+                $data['remaining_likes'] = (int)$plan_data->like_per_day - $today_like_count - ($undoCount-(int)$remainingUndoCount);
+            }
             $data['remaining_undo_count'] = $remainingUndoCount;
             $data['search_filters'] = explode(',',$plan_data->search_filters);
             $data['like_per_day']   = $plan_data->like_per_day;
-            $data['remaining_likes'] = (int)$plan_data->like_per_day - $today_like_count;
             $data['video_call']     = $plan_data->video_call;
             $data['who_like_me']    = $plan_data->who_like_me;
             $data['who_view_me']    = $plan_data->who_view_me;
@@ -375,10 +378,18 @@ class CustomerController extends BaseController
             $plan_data        = UserSubscription::where('user_id',$user_id)->where('expire_date','>',$today_date)->first();
             if($plan_data == null){
                 $plan_data         = Subscription::where('plan_type',"free")->first();
+                $undoCount = $plan_data->undo_profile;
+            }else{
+                $undoCount = $plan_data->undo_profile;
             }
             $today_like_count = UserLikes::where('like_from',$user_id)->whereDate('created_at', date('Y-m-d'))->count();
+          
+            $remainingUndoCount     = $this->remainingUndoCount(Auth::id(), $undoCount);
             $data['remaining_likes'] = (int)$plan_data->like_per_day - $today_like_count - 1;
-            
+            if($remainingUndoCount < $undoCount){
+                $data['remaining_likes'] = (int)$plan_data->like_per_day - $today_like_count - 1 - ($undoCount-(int)$remainingUndoCount);
+            }
+
             $input              = $request->all();
             $input['like_from'] = Auth::id();
             $input['status']    = (strtolower($input['status']) == 'like') ? 1 : 0;
@@ -898,6 +909,7 @@ class CustomerController extends BaseController
         try{
             $undo_profile_listing = [UserLikes::where('user_likes.like_from',Auth::id())
                                             ->where('user_likes.match_status',2)
+                                            ->where('user_likes.status',0)
                                             ->select('user_likes.id', 'user_likes.like_from','user_likes.like_to')
                                             ->latest()
                                             ->first()];
