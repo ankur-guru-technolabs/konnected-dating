@@ -60,6 +60,7 @@
                                             <option value="body_type" {{ in_array('body_type', $subscription->allowed_subscription) ? 'selected' : '' }}>Body Type</option>
                                             <option value="children" {{ in_array('children', $subscription->allowed_subscription) ? 'selected' : '' }}>Children</option>
                                             <option value="hobbies" {{ in_array('hobbies', $subscription->allowed_subscription) ? 'selected' : '' }}>Hobbies</option>
+                                            <option value="location" {{ in_array('location', $subscription->allowed_subscription) ? 'selected' : '' }}>Location</option>
                                         </select>
                                     </div>
                                     @if($errors->has('search_filters'))
