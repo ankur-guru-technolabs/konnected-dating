@@ -1205,7 +1205,7 @@ class CustomerController extends BaseController
             $title = "Video call is decline by ".$user->full_name;
             $message = "Video call is decline by ".$user->full_name; 
 
-            Helper::send_notification('single', Auth::id(), $request->receiver_id, $title, 'end_video_call', $message, $data);
+            Helper::send_notification('single', Auth::id(), $request->receiver_id, $title, 'decline_call', $message, $data);
             return $this->success([],'Video call declined');
         }
         catch(Exception $e){
