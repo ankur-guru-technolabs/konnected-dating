@@ -226,7 +226,6 @@ class CustomerController extends BaseController
                 'email'      => 'required|email|max:255|unique:users,email,'.$request->user_id,
                 // 'phone_no'   => 'required|string|unique:users,phone_no|max:20',
                 'location'   => 'required|string|max:255',
-                'city'       => 'required|string|max:255',
                 'latitude'   => 'required|numeric',
                 'longitude'  => 'required|numeric',
                 'job'        => 'required|string|max:255',
@@ -490,8 +489,8 @@ class CustomerController extends BaseController
                             ->whereRaw("CAST(age AS UNSIGNED) BETWEEN $request->min_age AND $request->max_age")
                             ->whereRaw("CAST(height AS UNSIGNED) BETWEEN $request->min_height AND $request->max_height");
 
-                            if($request->has('city')){                                        
-                                $query->where('city', $request->city);
+                            if($request->has('location')){                                        
+                                $query->where('location', $request->location);
                             } 
 
                             if ($request->has('education')) {

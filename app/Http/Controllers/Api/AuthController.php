@@ -321,7 +321,6 @@ class AuthController extends BaseController
                 'email'      => 'required|email|unique:users,email|max:255',
                 'phone_no'   => 'required|string|unique:users,phone_no|max:20',
                 'location'   => 'required|string|max:255',
-                'city'       => 'required|string|max:255',
                 'latitude'   => 'required|numeric',
                 'longitude'  => 'required|numeric',
                 'job'        => 'required|string|max:255',
