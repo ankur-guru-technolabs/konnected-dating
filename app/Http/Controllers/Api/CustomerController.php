@@ -1379,6 +1379,13 @@ class CustomerController extends BaseController
                 $user_coin->action          = '-'. $plan_data->coin;
                 $user_coin->save();
 
+                // Arpita mem
+
+                $currentDate = Carbon::now()->format('Y-m-d'); 
+                User::where("id",$user_id)->first()->update(array('undo_remaining_count' => (int)$plan_data->undo_profile, 'last_undo_date' => $currentDate));
+
+                // Arpita mem
+
                 // Notification for subscription purchase
 
                 $title = $plan_data->title." purchased successfully";
