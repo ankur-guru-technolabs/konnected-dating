@@ -1205,9 +1205,11 @@ class CustomerController extends BaseController
 
             $user = User::where('id',Auth::id())->first();
 
-            $receiver_img = UserPhoto::where('user_id',Auth::id())->where('type','profile_image')->first();
-            if(!empty($receiver_img)){
-                $receiver_image = $receiver_img->profile_photo;
+            $receiver_image =   asset('images/konnected-dating.png');
+            $login_user_image_data = UserPhoto::where('user_id',Auth::id())->where('type','profile_image')->first();
+
+            if(!empty($login_user_image_data)){
+                $receiver_image = $login_user_image_data->profile_photo;
             }
             $data = [
                 'sender_id'     =>  Auth::id(), 
