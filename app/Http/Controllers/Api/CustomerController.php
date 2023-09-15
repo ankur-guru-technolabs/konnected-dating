@@ -1508,12 +1508,16 @@ class CustomerController extends BaseController
 
     public function walletHistory(Request $request){
         try{
-            $walletHistory = UserCoin::where(function ($query) {
-                                $query->where('receiver_id', Auth::id())
-                                    ->orWhere(function ($query) {
-                                        $query->where('sender_id', Auth::id())
-                                            ->where('type', '!=', 'gift_card_receive');
-                                    });
+            $authId = Auth::id();
+            $walletHistory = UserCoin::where(function ($query) use ($authId) {
+                                $query->where(function ($query) use ($authId) {
+                                    $query->where('receiver_id', $authId)
+                                        ->where('type', '!=', 'gift_card_sent');
+                                })
+                                ->orWhere(function ($query) use ($authId) {
+                                    $query->where('sender_id', $authId)
+                                        ->where('type', '!=', 'gift_card_receive');
+                                });
                             })
                             ->orderBy('user_coins.id', 'desc')
                             ->paginate($request->input('perPage'), ['*'], 'page', $request->input('page'));
@@ -1532,7 +1536,7 @@ class CustomerController extends BaseController
                                                 AS total_balance', [Auth::id(), Auth::id()])
                                     ->value('total_balance') ?? 0;
                                     
-            return $this->success($data,'Chat list');
+            return $this->success($data,'Wallet list');
 
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
