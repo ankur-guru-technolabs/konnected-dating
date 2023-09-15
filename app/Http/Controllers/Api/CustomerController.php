@@ -725,6 +725,7 @@ class CustomerController extends BaseController
                 'match_id'      =>  $request->match_id,
                 'sender_name'   =>  Auth::user()->full_name,
                 'sender_image'  =>  $sender_image,
+                'image'         =>  $sender_image,
             ]; 
                
             // Notification for message send
@@ -1152,6 +1153,7 @@ class CustomerController extends BaseController
                     'userIdReceiver'  =>  $userIdReceiver,
                     'roleReceiver'  =>  $roleReceiver,
                     'rtcTokenReceiver'  =>  $rtcTokenReceiver,
+                    'image'         =>  $sender_image,
                 ];    
 
                 // Notification for video call
@@ -1203,14 +1205,15 @@ class CustomerController extends BaseController
 
             $user = User::where('id',Auth::id())->first();
 
-            $receiver_img = UserPhoto::where('user_id',Auth::id())->where('type','image')->first();
+            $receiver_img = UserPhoto::where('user_id',Auth::id())->where('type','profile_image')->first();
             if(!empty($receiver_img)){
                 $receiver_image = $receiver_img->profile_photo;
             }
             $data = [
                 'sender_id'     =>  Auth::id(), 
                 'receiver_id'   =>  $request->receiver_id, 
-                'receiver_image'  =>  $receiver_image,           
+                'receiver_image'=>  $receiver_image,           
+                'image'         =>  $receiver_image,           
             ];    
             
             $title = "Video call is decline by ".$user->full_name;
@@ -1487,8 +1490,8 @@ class CustomerController extends BaseController
                                                 AS total_balance', [Auth::id(), Auth::id()])
                                     ->value('total_balance') ?? 0;
 
-            $title =  $coin_data->coins. " purchased successfully";
-            $message =  $coin_data->coins. " purchased successfully"; 
+            $title =  $coin_data->coins. " coins purchased successfully";
+            $message =  $coin_data->coins. " coins purchased successfully"; 
             Helper::send_notification('single', 0, Auth::id(), $title, 'coin_purchase', $message, []);
 
             return $this->success($data,'Coin purchased successfully');
