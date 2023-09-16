@@ -402,6 +402,12 @@ class CustomerController extends BaseController
 
             $opposite_request = UserLikes::where('like_from',$input['like_to'])->where('like_to',$input['like_from'])->where('status',$input['status'])->exists();
            
+            $input['can_chat'] = 1;
+            $oppsite_user_gender = User::where('id',$input['like_to'])->select('gender')->first();
+            if(Auth::user()->gender != $oppsite_user_gender->gender){
+                $input['can_chat'] = 0;
+            } 
+            
             if($opposite_request && $input['status'] == 1){
                 $maxId = UserLikes::where('match_id', '>', 0)->max('match_id');
              
@@ -410,7 +416,7 @@ class CustomerController extends BaseController
                 $input['matched_at']    = now();
                 
                 UserLikes::where('like_from',$input['like_to'])->where('like_to',$input['like_from'])->where('status',$input['status'])->update(
-                    ['match_id' => $input['match_id'],'match_status' => $input['match_status'],'matched_at' => $input['matched_at']]);
+                    ['match_id' => $input['match_id'],'match_status' => $input['match_status'],'matched_at' => $input['matched_at'], 'can_chat' => $input['can_chat']]);
 
                 // Notification for match profile both side
 
@@ -465,6 +471,33 @@ class CustomerController extends BaseController
         return $this->error('Something went wrong','Something went wrong');
     }
 
+    // ALLOW CHAT
+
+    public function allowChat(Request $request){ 
+        try{
+            $validateData = Validator::make($request->all(), [
+                'match_id' => 'required', 
+            ]);
+
+            if ($validateData->fails()) {
+                return $this->error($validateData->errors(),'Validation error',403);
+            }   
+
+            UserLikes::where('match_id',$request->match_id)->update(['can_chat' => 1]);
+
+            $user_allow_notification = UserLikes::where('match_id',$request->match_id)->where('like_from',Auth::id())->select('like_to')->first();
+
+            // Notification for profile allow for chat
+
+            $title = Auth::user()->full_name . " has accepted your chat invitation";
+            $message = Auth::user()->full_name . " has accepted your chat invitation";
+            Helper::send_notification('single', Auth::id(), $user_allow_notification->like_to, $title, 'allow_chat', $message, []);
+            return $this->success([],'Allow chat');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
 
     // DISCOVER PROFILE
 
@@ -592,7 +625,7 @@ class CustomerController extends BaseController
                                             $join->on('user_likes.match_id', '=', 'c.match_id');
                                         }) 
                                         ->whereNull('c.id') 
-                                        ->select('user_likes.id', 'user_likes.like_from','user_likes.like_to','user_likes.match_id')
+                                        ->select('user_likes.id', 'user_likes.like_from','user_likes.like_to','user_likes.match_id','user_likes.can_chat')
                                         ->get();
 
             $data['matched_user_listing'] = $matched_user_listing->map(function ($user){
@@ -1323,6 +1356,13 @@ class CustomerController extends BaseController
     public function subscriptionList(Request $request){
         try{
             $data['subscription_list'] = Subscription::all();
+            $data['total_balance']     = UserCoin::where('receiver_id', Auth::id())
+                                        ->orWhere('sender_id', Auth::id())
+                                        ->whereIn('type', ['purchase_coin', 'gift_card_receive', 'purchase_plan', 'gift_card_sent'])
+                                        ->selectRaw('SUM(CASE WHEN receiver_id = ? AND type IN ("purchase_coin", "gift_card_receive") THEN coins_number ELSE 0 END) 
+                                                    - SUM(CASE WHEN sender_id = ? AND type IN ("purchase_plan", "gift_card_sent") THEN coins_number ELSE 0 END) 
+                                                    AS total_balance', [Auth::id(), Auth::id()])
+                                        ->value('total_balance') ?? 0;
             return $this->success($data,'Subscription listing');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');

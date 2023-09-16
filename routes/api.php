@@ -42,6 +42,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('get-user-plan', [CustomerController::class,'getUserPlan'])->name('get-user-plan');
     Route::post('update-user-profile', [CustomerController::class,'updateProfile'])->name('update-user-profile');
     Route::post('swipe-profile', [CustomerController::class,'swipeProfile'])->name('swipe-profile');
+    Route::post('allow-chat', [CustomerController::class,'allowChat'])->name('allow-chat');
     Route::post('discover-profile', [CustomerController::class,'discoverProfile'])->name('discover-profile');
     Route::get('matched-user-list', [CustomerController::class,'matchedUserList'])->name('matched-user-list');
     Route::get('chat-list', [CustomerController::class,'chatList'])->name('chat-list');

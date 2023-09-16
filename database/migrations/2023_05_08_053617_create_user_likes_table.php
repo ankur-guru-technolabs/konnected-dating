@@ -20,6 +20,7 @@ return new class extends Migration
             $table->unsignedBigInteger('match_id')->nullable()->index();
             $table->tinyInteger('match_status')->default(2)->comment('0: unmatched, 1: matched, 2: nothing')->index();
             $table->tinyInteger('status')->nullable()->comment('0: dislike, 1: like')->index();
+            $table->tinyInteger('can_chat')->default(1)->comment('0: No, 1: Yes')->index();
             $table->timestamp('matched_at')->nullable();
             $table->timestamps();
         });

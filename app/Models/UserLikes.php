@@ -15,6 +15,7 @@ class UserLikes extends Model
         'match_id',
         'match_status',
         'status',
+        'can_chat',
         'matched_at',
     ];
 
