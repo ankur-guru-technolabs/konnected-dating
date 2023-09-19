@@ -1155,7 +1155,7 @@ class CustomerController extends BaseController
         return $this->error('Something went wrong','Something went wrong');
     }
     
-    // VIDEO CALL
+    // VIDEO CALL 
 
     public function singleVideoCall(Request $request){
         try{
