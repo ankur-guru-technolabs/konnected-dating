@@ -124,8 +124,8 @@ class CustomerController extends BaseController
 
                     // Notification for profile view
 
-                    $title = "Your profile has been viewed by ".Auth::user()->full_name;
-                    $message = "Your profile has been viewed by ".Auth::user()->full_name; 
+                    $title = Auth::user()->full_name ." has viewed your profile";
+                    $message = Auth::user()->full_name ." has viewed your profile"; 
                     Helper::send_notification('single', Auth::id(), $id, $title, 'user_view', $message, []);
                 };
             }
@@ -475,8 +475,8 @@ class CustomerController extends BaseController
 
                 // Notification for profile like
 
-                $title = "You profile is liked by ".Auth::user()->full_name;
-                $message = "You profile is liked by ".Auth::user()->full_name; 
+                $title = Auth::user()->full_name ." has liked your profile";
+                $message = Auth::user()->full_name ." has liked your profile"; 
                 Helper::send_notification('single', Auth::id(), $input['like_to'], $title, 'like', $message, []);
             }
 
@@ -780,8 +780,8 @@ class CustomerController extends BaseController
             // Notification for message send
             $data = [];
             if($request->type != 'gift'){
-                $title = Auth::user()->full_name." sent you a message";
-                $message = Auth::user()->full_name." sent you a message"; 
+                $title = Auth::user()->full_name." has sent you a message";
+                $message = Auth::user()->full_name." has sent you a message"; 
                 Helper::send_notification('single', Auth::id(), $request->receiver_id, $title, 'message', $message, $custom);
             }else{
 
@@ -814,8 +814,8 @@ class CustomerController extends BaseController
                                                     AS total_balance', [Auth::id(), Auth::id()])
                                         ->value('total_balance') ?? 0;
     
-                $title =  "You have received a gift from ". Auth::user()->full_name;
-                $message =  "You have received a gift from ". Auth::user()->full_name; 
+                $title =  Auth::user()->full_name ." has sent you a gift";
+                $message =  Auth::user()->full_name ." has sent you a gift"; 
                 Helper::send_notification('single', Auth::id(), $request->receiver_id, $title, 'gift_card_receive', $message, $custom);
             }
        
@@ -889,8 +889,8 @@ class CustomerController extends BaseController
 
             // Notification for report
 
-            $title = Auth::user()->full_name ." reported your profile";
-            $message = Auth::user()->full_name ." reported your profile"; 
+            $title = Auth::user()->full_name ." has reported your profile";
+            $message = Auth::user()->full_name ." has reported your profile"; 
             Helper::send_notification('single', Auth::id(), $request->reported_user_id, $title, 'report', $message, []);
 
             return $this->success([],'Report done successfully');
@@ -1207,8 +1207,8 @@ class CustomerController extends BaseController
 
                 // Notification for video call
 
-                $title = "You have a video call request from ".Auth::user()->full_name;
-                $message = "You have a video call request from ".Auth::user()->full_name; 
+                $title = "You have a video call request from ". Auth::user()->full_name;
+                $message = "You have a video call request from ". Auth::user()->full_name; 
                 Helper::send_notification('single', Auth::id(), $request->receiver_id, $title, 'video_call', $message, $data);
 
                 return $this->success($data,'Video call done');
@@ -1267,8 +1267,8 @@ class CustomerController extends BaseController
                 'image'         =>  $receiver_image,           
             ];    
             
-            $title = "Video call is decline by ".$user->full_name;
-            $message = "Video call is decline by ".$user->full_name; 
+            $title = $user->full_name ." has declined your video call";
+            $message = $user->full_name ." has declined your video call"; 
 
             Helper::send_notification('single', Auth::id(), $request->receiver_id, $title, 'decline_call', $message, $data);
             return $this->success([],'Video call declined');
@@ -1449,8 +1449,8 @@ class CustomerController extends BaseController
 
                 // Notification for subscription purchase
 
-                $title = $plan_data->title." purchased successfully";
-                $message = $plan_data->title." purchased successfully"; 
+                $title = $plan_data->title." plan purchased successfully";
+                $message = $plan_data->title." plan purchased successfully"; 
                 Helper::send_notification('single', 0, Auth::id(), $title, 'subscription_purchase', $message, []);
 
                 $data['plan_id']         = $plan_data->id;
