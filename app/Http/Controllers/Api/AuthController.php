@@ -290,8 +290,8 @@ class AuthController extends BaseController
             $data['salary']     = Salary::all();
             $data['min_height'] = 6;
             $data['max_height'] = 25;
-            $data['min_age']    = 1;
-            $data['max_age']    = 18;
+            $data['min_age']    = 4;
+            $data['max_age']    = 83;
             return $this->success($data,'Registration form data');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');

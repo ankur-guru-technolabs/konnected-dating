@@ -37,7 +37,7 @@ class AdminController extends BaseController
     // AGE
 
     public function ageList(){
-        $ages = Age::all();
+        $ages = Age::where('id','>',3)->get();
         return view('admin.age.list',compact('ages'));
     }
     
