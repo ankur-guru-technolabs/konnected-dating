@@ -350,7 +350,7 @@ class CustomerController extends BaseController
                         $user_data->otp = $otp;
                     }
                 }
-                return $this->success($user_data,'You profile successfully updated');
+                return $this->success($user_data,'Your profile successfully updated');
             }
             return $this->error('Something went wrong','Something went wrong');
         }catch(Exception $e){
@@ -473,13 +473,14 @@ class CustomerController extends BaseController
                 
                 UserLikes::create($input);
 
-                // Notification for profile like
+                if($input['status'] == 1){
+                    // Notification for profile like
 
-                $title = Auth::user()->full_name ." has liked your profile";
-                $message = Auth::user()->full_name ." has liked your profile"; 
-                Helper::send_notification('single', Auth::id(), $input['like_to'], $title, 'like', $message, []);
+                    $title = Auth::user()->full_name ." has liked your profile";
+                    $message = Auth::user()->full_name ." has liked your profile"; 
+                    Helper::send_notification('single', Auth::id(), $input['like_to'], $title, 'like', $message, []);
+                }
             }
-
             return $this->success($data,'Profile liked successfully');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');

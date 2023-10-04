@@ -43,7 +43,7 @@ return new class extends Migration
             $table->string('hobbies');
             $table->string('undo_remaining_count')->nullable(0);
             $table->string('last_undo_date')->nullable();
-            $table->string('status')->default(0);
+            $table->string('status')->default(1);
             $table->string('is_notification_mute')->default(0);
             $table->string('fcm_token')->nullable();
             $table->string('google_id')->nullable();
