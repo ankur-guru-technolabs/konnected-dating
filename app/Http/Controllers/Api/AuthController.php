@@ -341,7 +341,7 @@ class AuthController extends BaseController
                 'photos.*'   => 'required|file|mimes:jpeg,png,jpg,mp4,mov,avi|max:100000', 
                 'profile_image'                => 'required|file|mimes:jpeg,png,jpg',
                 'thumbnail_image'              => 'required|file|mimes:jpeg,png,jpg',
-                'ice_breaker'                  => 'required|array|min:3',
+                'ice_breaker'                  => 'required|array|min:1|max:3',
                 'ice_breaker.*.ice_breaker_id' => 'required',
                 'ice_breaker.*.answer'         => 'required',
                 'questions'                    => 'required|array|min:8',
