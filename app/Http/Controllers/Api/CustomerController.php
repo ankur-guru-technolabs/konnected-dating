@@ -940,7 +940,7 @@ class CustomerController extends BaseController
                 return $this->error($validateData->errors(),'Validation error',403);
             }
             
-            $user_likes = UserLikes::where('like_from',Auth::id())->where('like_to',$request->id)->first();
+            $user_likes = UserLikes::where('like_from',Auth::id())->where('like_to',$request->user_id)->first();
             $user_view = UserReviewLater::where('user_review_from',Auth::id())->where('user_review_to',$request->user_id)->first();
             if(empty($user_likes) && empty($user_view)){
                 UserReviewLater::create(['user_review_from'=>Auth::id(),'user_review_to'=> $request->user_id]);
