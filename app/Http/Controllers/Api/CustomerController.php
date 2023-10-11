@@ -437,15 +437,15 @@ class CustomerController extends BaseController
 
                 $title = "Congrats! You have a match with ".Auth::user()->full_name;
                 $message = "Congrats! You have a match with ".Auth::user()->full_name; 
-                $data_for_receiver = array('match_id' => $input['match_id'],'sender_id'=> $input['like_to'],'sender_name' => $receiver_data->full_name,'sender_image'=> $receiver_image,'receiver_id'=> Auth::id(),'receiver_name' => Auth::user()->full_name,'receiver_image'=> $sender_image);
-                Helper::send_notification('single', Auth::id(), (int)$input['like_to'], $title, 'match', $message, $data_for_receiver);
+                $data_for_receiver = array('match_id' => $input['match_id'],'sender_id'=> (int)$input['like_to'],'sender_name' => $receiver_data->full_name,'sender_image'=> $receiver_image,'receiver_id'=> Auth::id(),'receiver_name' => Auth::user()->full_name,'receiver_image'=> $sender_image,'can_chat' => 0);
+                Helper::send_notification('single', Auth::id(), $input['like_to'], $title, 'match', $message, $data_for_receiver);
               
                 // Notification for match profile both side
                 
                 $title = "Congrats! You have a match with ". $receiver_data->full_name;
                 $message = "Congrats! You have a match with ". $receiver_data->full_name; 
-                $data_for_sender = array('match_id' => $input['match_id'],'sender_id'=> Auth::id(),'sender_name' => Auth::user()->full_name,'sender_image'=> $sender_image,'receiver_id'=> $input['like_to'],'receiver_name' => $receiver_data->full_name,'receiver_image'=> $receiver_image);
-                Helper::send_notification('single', (int)$input['like_to'], Auth::id(), $title, 'match', $message, $data_for_sender);
+                $data_for_sender = array('match_id' => $input['match_id'],'sender_id'=> Auth::id(),'sender_name' => Auth::user()->full_name,'sender_image'=> $sender_image,'receiver_id'=> (int)$input['like_to'],'receiver_name' => $receiver_data->full_name,'receiver_image'=> $receiver_image,'can_chat' => 0);
+                Helper::send_notification('single', $input['like_to'], Auth::id(), $title, 'match', $message, $data_for_sender);
             }
 
             if(!$same_request){
