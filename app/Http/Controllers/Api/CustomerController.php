@@ -46,6 +46,8 @@ use App\Lib\RtcTokenBuilder;
 use App\Models\UserSubscription;
 use Carbon\Carbon;
 
+use GuzzleHttp\Client;
+
 class CustomerController extends BaseController
 {
     //
@@ -504,11 +506,26 @@ class CustomerController extends BaseController
 
             $user_allow_notification = UserLikes::where('match_id',$request->match_id)->where('like_from',Auth::id())->select('like_to')->first();
 
+            
+            $sender_image =  asset('images/konnected-dating.png');
+            $login_user_image_data = UserPhoto::where('user_id',Auth::id())->where('type','profile_image')->first();
+
+            if(!empty($login_user_image_data)){
+                $sender_image = $login_user_image_data->profile_photo;
+            }
+            $custom = [
+                'sender_id'     =>  Auth::id(),
+                'match_id'      =>  $request->match_id,
+                'sender_name'   =>  Auth::user()->full_name,
+                'sender_image'  =>  $sender_image,
+                'image'         =>  $sender_image,
+            ]; 
+
             // Notification for profile allow for chat
 
             $title = Auth::user()->full_name . " has accepted your chat invitation";
             $message = Auth::user()->full_name . " has accepted your chat invitation";
-            Helper::send_notification('single', Auth::id(), $user_allow_notification->like_to, $title, 'allow_chat', $message, []);
+            Helper::send_notification('single', Auth::id(), $user_allow_notification->like_to, $title, 'allow_chat', $message, $custom);
             return $this->success([],'Allow chat');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
@@ -526,11 +543,16 @@ class CustomerController extends BaseController
                 'max_age' => 'required|gte:min_age',
                 'min_height' => 'required',
                 'max_height' => 'required|gte:min_height',
+                'latitude'    => 'required',
+                'longitude'   => 'required'
             ]);
 
             if ($validateData->fails()) {
                 return $this->error($validateData->errors(),'Validation error',403);
             }
+
+            $auth_lat1 = $request->input('latitude');
+            $auth_lon1 = $request->input('longitude');
 
             $query = User::where('users.id', '!=', Auth::id())
                             ->where('user_type', 'user')
@@ -540,7 +562,7 @@ class CustomerController extends BaseController
                             ->whereRaw("CAST(height AS UNSIGNED) BETWEEN $request->min_height AND $request->max_height");
 
                             if($request->has('location')){                                        
-                                $query->where('location', $request->location);
+                                // $query->where('location', $request->location);
                             } 
 
                             if ($request->has('education')) {
@@ -600,7 +622,19 @@ class CustomerController extends BaseController
                                      ->where('ur1.user_review_from', '=', Auth::id());
                             })->whereNull('ul1.id')->whereNull('ul2.id')->whereNull('ur1.id');
                             
-            $user_list = $query->select('users.id', 'first_name', 'last_name', 'location', 'job', 'age','live_latitude','live_longitude')->paginate($request->input('perPage'), ['*'], 'page', $request->input('page'));
+            // $user_list = $query->select('users.id', 'first_name', 'last_name', 'location', 'job', 'age','live_latitude','live_longitude')
+            $user_list  = $query->select(\DB::raw("users.id,first_name,last_name,location,job,age,latitude,longitude,(3959 * 
+                            acos(
+                                cos(radians(" . $auth_lat1 . ")) * 
+                                cos(radians(latitude)) * 
+                                cos(radians(longitude) - radians(" . $auth_lon1 . ")) + 
+                                sin(radians(" . $auth_lat1 . ")) * 
+                                sin(radians(latitude))
+                            )
+                        ) AS distance"))
+                        ->having('distance', '<=', 50)
+                        ->paginate($request->input('perPage'), ['*'], 'page', $request->input('page'));
+
 
             $data['user_list']  =   $user_list->map(function ($user){
                                         $profile_photo_media = $user->photos->firstWhere('type', 'profile_image');
@@ -778,6 +812,18 @@ class CustomerController extends BaseController
                 'image'         =>  $sender_image,
             ]; 
                
+            $can_chat = UserLikes::where('match_id',$request->match_id)->first()->value('can_chat');
+            if($can_chat == 0){
+                UserLikes::where('match_id',$request->match_id)->update(['can_chat' => 1]);
+                $user_allow_notification = UserLikes::where('match_id',$request->match_id)->where('like_from',Auth::id())->select('like_to')->first();
+    
+                // Notification for profile allow for chat
+    
+                $title = Auth::user()->full_name . " has accepted your chat invitation";
+                $message = Auth::user()->full_name . " has accepted your chat invitation";
+                Helper::send_notification('single', Auth::id(), $user_allow_notification->like_to, $title, 'allow_chat', $message, $custom);
+            }
+
             // Notification for message send
             $data = [];
             if($request->type != 'gift'){
@@ -1304,7 +1350,7 @@ class CustomerController extends BaseController
 
     public function notificationList(Request $request){
         try{
-            $notification_id  = Notification::where('receiver_id',Auth::id())->orderBy('id','desc')->take(30)->pluck('id')->toArray();
+            $notification_id  = Notification::where('receiver_id',Auth::id())->where('type','!=','message')->orderBy('id','desc')->take(30)->pluck('id')->toArray();
             Notification::whereNotIn('id', $notification_id)->where('receiver_id',Auth::id())->delete();
 
             $notification_data  = Notification::where('receiver_id',Auth::id())->orderBy('id','desc')->take(30)->get();
