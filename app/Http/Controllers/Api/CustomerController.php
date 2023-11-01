@@ -812,8 +812,8 @@ class CustomerController extends BaseController
                 'image'         =>  $sender_image,
             ]; 
                
-            $can_chat = UserLikes::where('match_id',$request->match_id)->first()->value('can_chat');
-            if($can_chat == 0){
+            $can_chat = UserLikes::where('match_id',$request->match_id)->first();
+            if($can_chat->can_chat == 0){
                 UserLikes::where('match_id',$request->match_id)->update(['can_chat' => 1]);
                 $user_allow_notification = UserLikes::where('match_id',$request->match_id)->where('like_from',Auth::id())->select('like_to')->first();
     
