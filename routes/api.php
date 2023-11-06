@@ -68,6 +68,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('subscription-list', [CustomerController::class,'subscriptionList'])->name('subscription-list');
     Route::post('purchase-subscription', [CustomerController::class,'purchaseSubscription'])->name('purchase-subscription');
     Route::get('active-subscription-list', [CustomerController::class,'activeSubscriptionList'])->name('active-subscription-list');
+    Route::get('subscription-history', [CustomerController::class,'subscriptionHistory'])->name('subscription-history');
     Route::get('get-coin-list', [CustomerController::class,'coinList'])->name('get-coin-list');
     Route::post('coin-purchase', [CustomerController::class,'coinPurchase'])->name('coin-purchase');
     Route::get('wallet-history', [CustomerController::class,'walletHistory'])->name('wallet-history');

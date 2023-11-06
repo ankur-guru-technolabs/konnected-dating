@@ -143,9 +143,9 @@ class CustomerController extends BaseController
 
     public function getUserPlan(Request $request){
         try{
-            $today_date = date('Y-m-d H:i:s');
+            $today_date = date('Y-m-d');
 
-            $plan_data           = UserSubscription::where('user_id',Auth::user()->id)->where('expire_date','>',$today_date)->first();
+            $plan_data           = UserSubscription::where('user_id',Auth::user()->id)->whereDate('expire_date','>=',$today_date)->orderby('id','asc')->first();
             if($plan_data == null){
                 $plan_data         = Subscription::where('plan_type',"free")->first();
                 $data['plan_id']   = (int)$plan_data->id;
@@ -375,8 +375,8 @@ class CustomerController extends BaseController
             }
 
             $user_id          = Auth::id();
-            $today_date       = date('Y-m-d H:i:s');
-            $plan_data        = UserSubscription::where('user_id',$user_id)->where('expire_date','>',$today_date)->first();
+            $today_date       = date('Y-m-d');
+            $plan_data        = UserSubscription::where('user_id',$user_id)->whereDate('expire_date','>=',$today_date)->orderby('id','asc')->first();
             if($plan_data == null){
                 $plan_data         = Subscription::where('plan_type',"free")->first();
                 $undoCount = $plan_data->undo_profile;
@@ -1028,8 +1028,8 @@ class CustomerController extends BaseController
                 UserLikes::where('user_likes.like_from',Auth::id())->where('user_likes.match_status',2)->latest()->first()->delete();
 
                 $user_id          = Auth::id();
-                $today_date       = date('Y-m-d H:i:s');
-                $plan_data        = UserSubscription::where('user_id',$user_id)->where('expire_date','>',$today_date)->first();
+                $today_date       = date('Y-m-d');
+                $plan_data        = UserSubscription::where('user_id',$user_id)->whereDate('expire_date','>=',$today_date)->orderby('id','asc')->first();
                 if($plan_data == null){
                     $plan_data         = Subscription::where('plan_type',"free")->first();
                 } 
@@ -1438,82 +1438,84 @@ class CustomerController extends BaseController
     public function purchaseSubscription(Request $request){
         try{
             $user_id = Auth::id();
-            $today_date = date('Y-m-d H:i:s');
-            $is_purchased = UserSubscription::where('user_id',$user_id)->where('expire_date','>',$today_date)->first();
-            if($is_purchased === null){
-                $total_balance = UserCoin::where('receiver_id', Auth::id())
-                ->orWhere('sender_id', Auth::id())
-                ->whereIn('type', ['purchase_coin', 'gift_card_receive', 'purchase_plan', 'gift_card_sent'])
-                ->selectRaw('SUM(CASE WHEN receiver_id = ? AND type IN ("purchase_coin", "gift_card_receive") THEN coins_number ELSE 0 END) 
-                            - SUM(CASE WHEN sender_id = ? AND type IN ("purchase_plan", "gift_card_sent") THEN coins_number ELSE 0 END) 
-                            AS total_balance', [Auth::id(), Auth::id()])
-                ->value('total_balance') ?? 0;
-                
-                
-                $plan_data = Subscription::where('id',$request->subscription_id)->first();
-                
-                if($total_balance < $plan_data->coin){
-                    return $this->error("Sorry, but you don't have enough coins to purchase this plan.","Sorry, but you don't have enough coins to purchase this plan.");
-                };
+            $today_date = date('Y-m-d');
+            $is_purchased = UserSubscription::where('user_id',$user_id)->whereDate('expire_date','>=',$today_date)->latest()->first();
+            $total_balance = UserCoin::where('receiver_id', Auth::id())
+            ->orWhere('sender_id', Auth::id())
+            ->whereIn('type', ['purchase_coin', 'gift_card_receive', 'purchase_plan', 'gift_card_sent'])
+            ->selectRaw('SUM(CASE WHEN receiver_id = ? AND type IN ("purchase_coin", "gift_card_receive") THEN coins_number ELSE 0 END) 
+                        - SUM(CASE WHEN sender_id = ? AND type IN ("purchase_plan", "gift_card_sent") THEN coins_number ELSE 0 END) 
+                        AS total_balance', [Auth::id(), Auth::id()])
+                        ->value('total_balance') ?? 0;
+                        
+            
+            $plan_data = Subscription::where('id',$request->subscription_id)->first();
+            
+            if($is_purchased !== null){
+               $expire_date = date('Y-m-d H:i:s', strtotime($is_purchased->expire_date. ' +'.$plan_data->plan_duration.' days'));
+            } 
 
-                $user_subscription                  =  new UserSubscription();
-                $user_subscription->user_id         =  $user_id; 
-                $user_subscription->subscription_id =  $plan_data->id; 
-                $user_subscription->expire_date     =  Date('Y-m-d H:i:s', strtotime('+'.$plan_data->plan_duration. 'days')); 
-                $user_subscription->title           =  $plan_data->title; 
-                $user_subscription->description     =  $plan_data->description;
-                $user_subscription->search_filters  =  $plan_data->search_filters;
-                $user_subscription->like_per_day    =  $plan_data->like_per_day;
-                $user_subscription->video_call      =  $plan_data->video_call;
-                $user_subscription->who_like_me     =  $plan_data->who_like_me;
-                $user_subscription->who_view_me     =  $plan_data->who_view_me;
-                $user_subscription->undo_profile    =  $plan_data->undo_profile;
-                $user_subscription->read_receipt    =  $plan_data->read_receipt;
-                $user_subscription->travel_mode     =  $plan_data->travel_mode;
-                $user_subscription->profile_badge   =  $plan_data->profile_badge;
-                $user_subscription->coin            =  $plan_data->coin;   
-                $user_subscription->month           =  $plan_data->month; 
-                $user_subscription->plan_duration   =  $plan_data->plan_duration; 
-                $user_subscription->plan_type       =  $plan_data->plan_type; 
-                $user_subscription->save(); 
+            if($total_balance < $plan_data->coin){
+                return $this->error("Sorry, but you don't have enough coins to purchase this plan.","Sorry, but you don't have enough coins to purchase this plan.");
+            };
+                        
+            $user_subscription                  =  new UserSubscription();
+            $user_subscription->user_id         =  $user_id; 
+            $user_subscription->subscription_id =  $plan_data->id; 
+            $user_subscription->expire_date     =  $expire_date ?? Date('Y-m-d H:i:s', strtotime('+'.$plan_data->plan_duration. 'days')); 
+            $user_subscription->title           =  $plan_data->title; 
+            $user_subscription->description     =  $plan_data->description;
+            $user_subscription->search_filters  =  $plan_data->search_filters;
+            $user_subscription->like_per_day    =  $plan_data->like_per_day;
+            $user_subscription->video_call      =  $plan_data->video_call;
+            $user_subscription->who_like_me     =  $plan_data->who_like_me;
+            $user_subscription->who_view_me     =  $plan_data->who_view_me;
+            $user_subscription->undo_profile    =  $plan_data->undo_profile;
+            $user_subscription->read_receipt    =  $plan_data->read_receipt;
+            $user_subscription->travel_mode     =  $plan_data->travel_mode;
+            $user_subscription->profile_badge   =  $plan_data->profile_badge;
+            $user_subscription->coin            =  $plan_data->coin;   
+            $user_subscription->month           =  $plan_data->month; 
+            $user_subscription->plan_duration   =  $plan_data->plan_duration; 
+            $user_subscription->plan_type       =  $plan_data->plan_type; 
+            $user_subscription->save(); 
 
 
-                $user_coin = new UserCoin();
-                $user_coin->sender_id       = Auth::id();
-                $user_coin->receiver_id     = 0;
-                $user_coin->coins_number    = $plan_data->coin;
-                $user_coin->message         = "Purchased ".$plan_data->title;
-                $user_coin->type            = "purchase_plan";
-                $user_coin->action          = '-'. $plan_data->coin;
-                $user_coin->save();
+            $user_coin = new UserCoin();
+            $user_coin->sender_id       = Auth::id();
+            $user_coin->receiver_id     = 0;
+            $user_coin->coins_number    = $plan_data->coin;
+            $user_coin->message         = "Purchased ".$plan_data->title;
+            $user_coin->type            = "purchase_plan";
+            $user_coin->action          = '-'. $plan_data->coin;
+            $user_coin->save();
 
-                // Arpita mem
+            // Arpita mem
 
-                $currentDate = Carbon::now()->format('Y-m-d'); 
-                User::where("id",$user_id)->first()->update(array('undo_remaining_count' => (int)$plan_data->undo_profile, 'last_undo_date' => $currentDate));
+            $currentDate = Carbon::now()->format('Y-m-d'); 
+            User::where("id",$user_id)->first()->update(array('undo_remaining_count' => (int)$plan_data->undo_profile, 'last_undo_date' => $currentDate));
 
-                // Arpita mem
+            // Arpita mem
 
-                // Notification for subscription purchase
+            // Notification for subscription purchase
 
-                $title = $plan_data->title." plan purchased successfully";
-                $message = $plan_data->title." plan purchased successfully"; 
-                Helper::send_notification('single', 0, Auth::id(), $title, 'subscription_purchase', $message, []);
+            $title = $plan_data->title." plan purchased successfully";
+            $message = $plan_data->title." plan purchased successfully"; 
+            Helper::send_notification('single', 0, Auth::id(), $title, 'subscription_purchase', $message, []);
 
-                $data['plan_id']         = $plan_data->id;
-                $data['plan_type']       = $plan_data->plan_type;
-                $data['search_filters'] = explode(',',$plan_data->search_filters);
-                $data['like_per_day']   = $plan_data->like_per_day;
-                $data['video_call']     = $plan_data->video_call;
-                $data['who_like_me']    = $plan_data->who_like_me;
-                $data['who_view_me']    = $plan_data->who_view_me;
-                $data['undo_profile']   = (int)$plan_data->undo_profile;
-                $data['read_receipt']   = $plan_data->read_receipt;
-                $data['travel_mode']    = $plan_data->travel_mode;
-                $data['profile_badge']  = $plan_data->profile_badge;
-                return $this->success($data,'Subscription purchased successfully');
-            }
-            return $this->error('You have already purchased plan','You have already purchased plan');
+            $data['plan_id']         = $plan_data->id;
+            $data['plan_type']       = $plan_data->plan_type;
+            $data['search_filters'] = explode(',',$plan_data->search_filters);
+            $data['like_per_day']   = $plan_data->like_per_day;
+            $data['video_call']     = $plan_data->video_call;
+            $data['who_like_me']    = $plan_data->who_like_me;
+            $data['who_view_me']    = $plan_data->who_view_me;
+            $data['undo_profile']   = (int)$plan_data->undo_profile;
+            $data['read_receipt']   = $plan_data->read_receipt;
+            $data['travel_mode']    = $plan_data->travel_mode;
+            $data['profile_badge']  = $plan_data->profile_badge;
+            return $this->success($data,'Subscription purchased successfully');
+            // return $this->error('You have already purchased plan','You have already purchased plan');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
         }
@@ -1525,14 +1527,29 @@ class CustomerController extends BaseController
     public function activeSubscriptionList(Request $request){
         try{
             $user_id = Auth::id();
-            $today_date = date('Y-m-d H:i:s');
-            $is_purchased = UserSubscription::where('user_id',$user_id)->where('expire_date','>',$today_date)->first();
+            $today_date = date('Y-m-d');
+            $is_purchased = UserSubscription::where('user_id',$user_id)->whereDate('expire_date','>=',$today_date)->orderby('id','asc')->first();
             if($is_purchased != null){
-                $data= Subscription::where('id',$is_purchased->subscription_id)->first();
+                $data= $is_purchased;
             }else{
                 $data= Subscription::where('plan_type','free')->first();
             }
             return $this->success($data,'Active subscription successfully');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+    
+    // SUBSCRIPTION HISTORY
+    
+    public function subscriptionHistory(Request $request){
+        try{
+            $user_id = Auth::id();
+            $today_date = date('Y-m-d');
+            $data['active_suvscription'] = UserSubscription::where('user_id',$user_id)->whereDate('expire_date','>=',$today_date)->orderby('id','asc')->first();
+            $data['subscription_list'] = UserSubscription::where('user_id',$user_id)->latest()->get();
+            return $this->success($data,'Subscription history');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
         }
