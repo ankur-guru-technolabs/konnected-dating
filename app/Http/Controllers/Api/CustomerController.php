@@ -58,7 +58,8 @@ class CustomerController extends BaseController
         try{
             $validateData = Validator::make($request->all(), [
                 'photos.*.name' => 'required',
-                'photos.*.type' => 'required'
+                'photos.*.type' => 'required',
+                'user_id'       => 'required'
             ]);
 
             if ($validateData->fails()) {
@@ -66,7 +67,7 @@ class CustomerController extends BaseController
             }   
             
             $photos = $request->photos;
-            $user_id = Auth::id();
+            $user_id = $request->user_id;
             $photos = array_map(function ($photo) use ($user_id) {
                 return array_merge($photo, [
                     'user_id' => $user_id,
