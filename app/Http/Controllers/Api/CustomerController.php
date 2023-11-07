@@ -80,7 +80,9 @@ class CustomerController extends BaseController
             if(isset($request->old_images)){
                 UserPhoto::whereIn('id',$request->old_images)->delete();
             }
-            return $this->success([],'Photos uploaded successfully');
+
+            $data['user'] = User::find($user_id);
+            return $this->success($data,'Photos uploaded successfully');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
         }
