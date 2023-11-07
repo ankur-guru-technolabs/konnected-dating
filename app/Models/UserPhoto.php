@@ -19,8 +19,13 @@ class UserPhoto extends Model
 
     // ACCESSOR
 
+    // public function getProfilePhotoAttribute()
+    // {
+    //     return asset('/user_profile/' . $this->name);
+    // }
+
     public function getProfilePhotoAttribute()
     {
-        return asset('/user_profile/' . $this->name);
+        return $this->name;
     }
 }

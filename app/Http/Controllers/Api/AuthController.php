@@ -337,10 +337,10 @@ class AuthController extends BaseController
                 'faith'      => 'required',
                 'ethnticity' => 'required',
                 'hobbies'    => 'required',
-                'photos'     => 'required|array|min:3',
-                'photos.*'   => 'required|file|mimes:jpeg,png,jpg,mp4,mov,avi|max:100000', 
-                'profile_image'                => 'required|file|mimes:jpeg,png,jpg',
-                'thumbnail_image'              => 'required|file|mimes:jpeg,png,jpg',
+                // 'photos'     => 'required|array|min:3',
+                // 'photos.*'   => 'required|file|mimes:jpeg,png,jpg,mp4,mov,avi|max:100000', 
+                // 'profile_image'                => 'required|file|mimes:jpeg,png,jpg',
+                // 'thumbnail_image'              => 'required|file|mimes:jpeg,png,jpg',
                 'ice_breaker'                  => 'required|array|min:1|max:3',
                 'ice_breaker.*.ice_breaker_id' => 'required',
                 'ice_breaker.*.answer'         => 'required',
@@ -385,32 +385,32 @@ class AuthController extends BaseController
                 }
                 UserQuestion::insert($question_new);
 
-                $folderPath = public_path().'/user_profile';
-                if (!is_dir($folderPath)) {
-                    mkdir($folderPath, 0777, true);
-                }
+                // $folderPath = public_path().'/user_profile';
+                // if (!is_dir($folderPath)) {
+                //     mkdir($folderPath, 0777, true);
+                // }
                 
                 
-                $mediaFiles = $request->file('photos');
-                $thumbnailImage = $request->file('thumbnail_image');
-                $profileImage = $request->file('profile_image');
+                // $mediaFiles = $request->file('photos');
+                // $thumbnailImage = $request->file('thumbnail_image');
+                // $profileImage = $request->file('profile_image');
 
-                $user_photo_data = [];
+                // $user_photo_data = [];
 
-                if (!empty($mediaFiles)) {
-                    $user_photo_data = $this->uploadMediaFiles($mediaFiles, $user_data->id);
-                }
+                // if (!empty($mediaFiles)) {
+                //     $user_photo_data = $this->uploadMediaFiles($mediaFiles, $user_data->id);
+                // }
 
-                if (!empty($thumbnailImage)) {
-                    $user_photo_data[] = $this->uploadImageFile($thumbnailImage, $user_data->id, 'thumbnail_image');
-                }
+                // if (!empty($thumbnailImage)) {
+                //     $user_photo_data[] = $this->uploadImageFile($thumbnailImage, $user_data->id, 'thumbnail_image');
+                // }
     
-                if (!empty($profileImage)) {
-                    $user_photo_data[] = $this->uploadImageFile($profileImage, $user_data->id, 'profile_image');
-                }
+                // if (!empty($profileImage)) {
+                //     $user_photo_data[] = $this->uploadImageFile($profileImage, $user_data->id, 'profile_image');
+                // }
 
-                UserPhoto::insert($user_photo_data);
-                 
+                // UserPhoto::insert($user_photo_data); 
+
                 $temp         = Temp::where('key',$request->email)->first();
                 if($temp != null){
                     $user_data['otp'] = (int)$temp->value; 
@@ -420,21 +420,21 @@ class AuthController extends BaseController
             return $this->error('Something went wrong','Something went wrong');
         }catch(Exception $e){
             if(isset($user_data->id)){
-                $user_old_photo_name = UserPhoto::where('user_id',$user_data->id)->pluck('name')->toArray();
+                // $user_old_photo_name = UserPhoto::where('user_id',$user_data->id)->pluck('name')->toArray();
 
-                $deletedFiles = [];
-                if(!empty($user_old_photo_name)){
-                    foreach ($user_old_photo_name as $name) {
-                        $path = public_path('user_profile/' . $name);
-                        if (File::exists($path)) {
-                            if (!is_writable($path)) {
-                                chmod($path, 0777);
-                            }
-                            File::delete($path);
-                            $deletedFiles[] = $path;
-                        }
-                    };
-                }
+                // $deletedFiles = [];
+                // if(!empty($user_old_photo_name)){
+                //     foreach ($user_old_photo_name as $name) {
+                //         $path = public_path('user_profile/' . $name);
+                //         if (File::exists($path)) {
+                //             if (!is_writable($path)) {
+                //                 chmod($path, 0777);
+                //             }
+                //             File::delete($path);
+                //             $deletedFiles[] = $path;
+                //         }
+                //     };
+                // }
                 UserIceBreaker::where('user_id',$user_data->id)->delete();
                 UserPhoto::where('user_id',$user_data->id)->delete();
                 UserQuestion::where('user_id',$user_data->id)->delete();
