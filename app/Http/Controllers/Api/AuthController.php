@@ -184,6 +184,7 @@ class AuthController extends BaseController
                             $user->tokens()->delete();
                             $user->fcm_token = $request->fcm_token;
                             $user->save();
+                            $data['user_photo_exits'] = UserPhoto::where('user_id',$user->id)->count() > 0 ? true : false;
                             $data['token'] = $user->createToken('Auth token')->accessToken;
                         }
 
