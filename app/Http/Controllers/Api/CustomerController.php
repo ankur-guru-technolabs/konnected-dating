@@ -121,6 +121,10 @@ class CustomerController extends BaseController
                       ->select('user_questions.id', 'user_questions.user_id', 'user_questions.question_id', 'user_questions.answer_id', 'questions.question', 'sub_questions.option');
             }])->find($id);
             
+            if(isset($request->id)){
+                $data['user']->makeHidden(['google_id','facebook_id']);
+            } 
+
             if(!empty($data['user']) && !empty($data['user']['iceBreakers'])){
                 $data['user']['ice_breakers_new'] = $data['user']['iceBreakers']->concat($iceBreakers);
             }
@@ -263,7 +267,7 @@ class CustomerController extends BaseController
                 'user_id'    => 'required',
                 'first_name' => 'required|string|max:255',
                 'last_name'  => 'required|string|max:255',
-                'email'      => 'required|email|max:255|unique:users,email,'.$request->user_id,
+                'email'      => 'nullable|email|max:255|unique:users,email,'.$request->user_id,
                 // 'phone_no'   => 'required|string|unique:users,phone_no|max:20',
                 'location'   => 'required|string|max:255',
                 'latitude'   => 'required|numeric',
@@ -302,7 +306,7 @@ class CustomerController extends BaseController
 
             $otp = 0;
             if($user_data){
-                if($user_data->email != $request->email){
+                if(!empty(($user_data->email)) && ($user_data->email != $request->email)){
                     // $user_data->email_verified = 0;
                     // $user_data->otp_verified = 0;
                     // $user_data->save();
@@ -384,7 +388,7 @@ class CustomerController extends BaseController
                 // UserPhoto::insert($user_photo_data);
 
                 $user_data->new_email = null;
-                if($user_data->email != $request->email){
+                if(!empty(($user_data->email)) && ($user_data->email != $request->email)){
                     $user_data->new_email = $request->email;
                     if($otp > 0){
                         $user_data->otp = $otp;

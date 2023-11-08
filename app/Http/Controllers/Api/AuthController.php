@@ -249,6 +249,7 @@ class AuthController extends BaseController
         try{
             $validateData = Validator::make($request->all(), [
                 'social_id' => 'required',
+                'fcm_token' => 'required',
             ]);
 
             if ($validateData->fails()) {
@@ -258,6 +259,8 @@ class AuthController extends BaseController
             $findUser = User::where('google_id', $request->social_id)->orWhere('facebook_id',$request->social_id)->first();
             if($findUser){
                 $findUser->tokens()->delete();
+                $findUser->fcm_token = $request->fcm_token;
+                $findUser->save();
                 $data['token'] = $findUser->createToken('Auth token')->accessToken;
                 return $this->success($data,'Login successfully');
             }else{
@@ -318,8 +321,8 @@ class AuthController extends BaseController
             $validateData = Validator::make($request->all(), [
                 'first_name' => 'required|string|max:255',
                 'last_name'  => 'required|string|max:255',
-                'email'      => 'required|email|unique:users,email|max:255',
-                'phone_no'   => 'required|string|unique:users,phone_no|max:20',
+                'email'      => 'nullable|email|unique:users,email|max:255',
+                'phone_no'   => 'nullable|string|unique:users,phone_no|max:20',
                 'location'   => 'required|string|max:255',
                 'latitude'   => 'required|numeric',
                 'longitude'  => 'required|numeric',
@@ -353,10 +356,15 @@ class AuthController extends BaseController
                 return $this->error($validateData->errors(),'Validation error',403);
             } 
 
-            $this->sendOtp($request);
+            if(!isset($request->google_id) && !isset($request->facebook_id)){
+                $this->sendOtp($request);
+            }
             $input                   = $request->all();
             $input['user_type']      = 'user';
             $input['phone_verified'] = 1;
+            if(isset($request->google_id) || isset($request->facebook_id)){
+                $input['email_verified'] = 1;
+            }
             $input['google_id']      = isset($request->google_id) ? $request->google_id : null;
 
             $user_data  = User::create($input);
@@ -411,9 +419,18 @@ class AuthController extends BaseController
 
                 // UserPhoto::insert($user_photo_data); 
 
-                $temp         = Temp::where('key',$request->email)->first();
-                if($temp != null){
-                    $user_data['otp'] = (int)$temp->value; 
+                if(!isset($request->google_id) && !isset($request->facebook_id)){
+                    $temp         = Temp::where('key',$request->email)->first();
+                    if($temp != null){
+                        $user_data['otp'] = (int)$temp->value; 
+                    }
+                }
+                if(isset($request->google_id) || isset($request->facebook_id)){
+                   // Notification for welcome
+
+                   $title = "Welcome to Konnected App";
+                   $message = "Welcome to Konnected App"; 
+                   Helper::send_notification('single', 0, $user_data->id, $title, 'welcome', $message, []);
                 }
                 return $this->success($user_data,'You are successfully registered');
             }
