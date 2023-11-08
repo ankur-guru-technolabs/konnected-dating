@@ -26,6 +26,7 @@ use App\Models\Question;
 use App\Models\Salary; 
 use App\Models\Setting;
 use App\Models\Subscription;
+use App\Models\Temp;
 use App\Models\User;
 use App\Models\UserCoin;
 use App\Models\UserIceBreaker;
