@@ -179,12 +179,12 @@ class AuthController extends BaseController
                                 $data['otp'] = (int)$data11['data']['otp'];  
                             } 
                         }
-
+                        
+                        $data['user_photo_exits'] = UserPhoto::where('user_id',$user->id)->count() > 0 ? true : false;
                         if($user->email_verified == 1 && $user->phone_verified = 1 && $user->otp_verified == 1 && $request->type != 'edit'){
                             $user->tokens()->delete();
                             $user->fcm_token = $request->fcm_token;
                             $user->save();
-                            $data['user_photo_exits'] = UserPhoto::where('user_id',$user->id)->count() > 0 ? true : false;
                             $data['token'] = $user->createToken('Auth token')->accessToken;
                         }
 
