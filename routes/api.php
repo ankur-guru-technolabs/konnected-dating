@@ -36,9 +36,9 @@ Route::get('authorized/{provider}/callback', [AuthController::class, 'handleProv
 // FOR GOOGLE/FACEBOOK CURRENTLY THIS IS USED
 
 Route::post('check-social-user', [AuthController::class,'checkSocailUser'])->name('check-social-login');
+Route::post('upload-user-media', [CustomerController::class,'uploadUserMedia'])->name('upload-user-media');
 
 Route::middleware('auth:api')->group(function () {
-    Route::post('upload-user-media', [CustomerController::class,'uploadUserMedia'])->name('upload-user-media');
     Route::get('get-user-profile/{id?}', [CustomerController::class,'getProfile'])->name('get-user-profile');
     Route::get('get-user-plan', [CustomerController::class,'getUserPlan'])->name('get-user-plan');
     Route::post('update-user-profile', [CustomerController::class,'updateProfile'])->name('update-user-profile');
