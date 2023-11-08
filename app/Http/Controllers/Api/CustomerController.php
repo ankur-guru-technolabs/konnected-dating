@@ -83,6 +83,10 @@ class CustomerController extends BaseController
             }
 
             $data['user'] = User::find($user_id);
+            $temp_data = Temp::where('key',$data['user']->email)->first();
+            if(!empty($temp_data)){
+                $data['user']['otp'] = (int)$temp_data->value;
+            }
             return $this->success($data,'Photos uploaded successfully');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
