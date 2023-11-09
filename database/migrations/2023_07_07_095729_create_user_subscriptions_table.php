@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id')->index();
             $table->unsignedBigInteger('subscription_id')->index();
+            $table->string('start_date')->nullable();
             $table->string('expire_date')->nullable();
             $table->string('title');
             $table->text('description')->nullable();

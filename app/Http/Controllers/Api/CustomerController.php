@@ -83,10 +83,10 @@ class CustomerController extends BaseController
                 UserPhoto::whereIn('id',$request->old_images)->delete();
             }
 
-            $data['user'] = User::find($user_id);
+            $data = User::find($user_id);
             $temp_data = Temp::where('key',$data['user']->email)->first();
             if(!empty($temp_data)){
-                $data['user']['otp'] = (int)$temp_data->value;
+                $data['otp'] = (int)$temp_data->value;
             }
             return $this->success($data,'Photos uploaded successfully');
         }catch(Exception $e){
@@ -1499,7 +1499,9 @@ class CustomerController extends BaseController
             $plan_data = Subscription::where('id',$request->subscription_id)->first();
             
             if($is_purchased !== null){
-               $expire_date = date('Y-m-d H:i:s', strtotime($is_purchased->expire_date. ' +'.$plan_data->plan_duration.' days'));
+                // IT IS CHECK IF PLAN EXIST THEN TAKE EXPIRE DATE OF THAT PLAN AND ADD ONE DAY IN THAT DATE AND CONSIDER AS START DATE OF NEW PLAN 
+                $plan_start_date = date('Y-m-d H:i:s', strtotime($is_purchased->expire_date. ' +1 days'));
+                $expire_date = date('Y-m-d H:i:s', strtotime($is_purchased->expire_date. ' +'.$plan_data->plan_duration.' days'));
             } 
 
             if($total_balance < $plan_data->coin){
@@ -1509,6 +1511,7 @@ class CustomerController extends BaseController
             $user_subscription                  =  new UserSubscription();
             $user_subscription->user_id         =  $user_id; 
             $user_subscription->subscription_id =  $plan_data->id; 
+            $user_subscription->start_date      =  $plan_start_date ?? Date('Y-m-d H:i:s'); 
             $user_subscription->expire_date     =  $expire_date ?? Date('Y-m-d H:i:s', strtotime('+'.$plan_data->plan_duration. 'days')); 
             $user_subscription->title           =  $plan_data->title; 
             $user_subscription->description     =  $plan_data->description;
