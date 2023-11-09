@@ -84,7 +84,7 @@ class CustomerController extends BaseController
             }
 
             $data = User::find($user_id);
-            $temp_data = Temp::where('key',$data['user']->email)->first();
+            $temp_data = Temp::where('key',$data->email)->first();
             if(!empty($temp_data)){
                 $data['otp'] = (int)$temp_data->value;
             }
