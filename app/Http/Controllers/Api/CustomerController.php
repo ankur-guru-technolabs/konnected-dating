@@ -604,6 +604,7 @@ class CustomerController extends BaseController
             $query = User::where('users.id', '!=', Auth::id())
                             ->where('user_type', 'user')
                             ->where('users.status', 1)
+                            ->where('email_verified', 1)
                             ->where('gender', $request->gender)
                             ->whereRaw("CAST(age AS UNSIGNED) BETWEEN $request->min_age AND $request->max_age")
                             ->whereRaw("CAST(height AS UNSIGNED) BETWEEN $request->min_height AND $request->max_height");
