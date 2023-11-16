@@ -257,10 +257,6 @@ class AuthController extends BaseController
                 return $this->error($validateData->errors(),'Validation error',403);
             } 
 
-            if($request->email && User::where('email', '=', $request->email)->count() > 0){
-                return $this->error('Email already exist','Email already exist');
-            }
-            
             $findUser = User::where('google_id', $request->social_id)->orWhere('facebook_id',$request->social_id)->first();
             if($findUser){
                 $findUser->tokens()->delete();
@@ -270,6 +266,9 @@ class AuthController extends BaseController
                 $data['user_photo_exits'] = UserPhoto::where('user_id',$findUser->id)->count() > 0 ? true : false;
                 return $this->success($data,'Login successfully');
             }else{
+                if($request->email && User::where('email', '=', $request->email)->count() > 0){
+                    return $this->error('Email already exist','Email already exist');
+                }
                 $data['social_id']   = $request->social_id;
                 return $this->success($data,'Signup successfully');
             }
