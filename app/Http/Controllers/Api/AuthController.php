@@ -263,6 +263,7 @@ class AuthController extends BaseController
                 $findUser->fcm_token = $request->fcm_token;
                 $findUser->save();
                 $data['token'] = $findUser->createToken('Auth token')->accessToken;
+                $data['user_id'] = $findUser->id;
                 $data['user_photo_exits'] = UserPhoto::where('user_id',$findUser->id)->count() > 0 ? true : false;
                 return $this->success($data,'Login successfully');
             }else{
