@@ -196,6 +196,22 @@
                 </div>
             </li>
             <li class="nav-item">
+                <a data-bs-toggle="collapse" href="#category_menu" class="nav-link text-white {{ isActivePrefix('category','active') }}" aria-controls="category_menu" role="button" aria-expanded="{{ isActivePrefix('category','true') }}">
+                    <i class="material-icons-round opacity-10">category</i>
+                    <span class="nav-link-text ms-2 ps-1">Category</span>
+                </a>
+                <div class="collapse {{ isActivePrefix('category','show') }}" id="category_menu">
+                    <ul class="nav ">
+                        <li class="nav-item {{isActive('category.list')}}">
+                            <a class="nav-link text-white {{isActive('category.list')}}" href="{{route('category.list')}}">
+                                <i class="material-icons opacity-10">list_alt</i>
+                                <span class="sidenav-normal  ms-2  ps-1">List</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#faq_menu" class="nav-link text-white {{ isActivePrefix('faq','active') }}" aria-controls="faq_menu" role="button" aria-expanded="{{ isActivePrefix('faq','true') }}">
                     <i class="material-icons-round opacity-10">quiz</i>
                     <span class="nav-link-text ms-2 ps-1">FAQ</span>

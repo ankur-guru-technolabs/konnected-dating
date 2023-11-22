@@ -27,7 +27,7 @@
                                 @foreach($orders as $key=>$order)
                                     <tr>
                                         <td>{{++$key}}</td>
-                                        <td>{{$order->user->full_name}}</td>
+                                        <td>{{$order->user->full_name ?? '-'}}</td>
                                         <td>{{date ('d - m - Y', strtotime($order->created_at))}}</td>
                                         <td>{{date ('d - m - Y', strtotime($order->expire_date))}}</td>
                                         <td>{{$order->title}}</td>

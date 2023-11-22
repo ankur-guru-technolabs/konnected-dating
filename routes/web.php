@@ -140,6 +140,13 @@ Route::middleware(['admin'])->group(function () {
         Route::post('subscription-update', [AdminController::class, 'subscriptionUpdate'])->name('subscription-update');
     });
     
+    Route::group(['prefix' => 'category','as'=>'category.'], function () {
+        Route::get('list', [AdminController::class, 'categoryList'])->name('list');
+        Route::post('store', [AdminController::class, 'categoryStore'])->name('store');
+        Route::post('update', [AdminController::class, 'categoryUpdate'])->name('update');
+        Route::get('delete/{id}', [AdminController::class, 'categoryDelete'])->name('delete');
+    });
+   
     Route::group(['prefix' => 'faq','as'=>'faq.'], function () {
         Route::get('list', [AdminController::class, 'faqList'])->name('list');
         Route::get('faq-edit/{id}', [AdminController::class, 'faqEdit'])->name('faq-edit');

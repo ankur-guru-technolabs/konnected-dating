@@ -12,5 +12,13 @@ class Faq extends Model
     protected $fillable = [
         'question',
         'answer',
+        'category_id'
     ];
+
+    // RELATIONSHIPS
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class,'category_id');
+    }
 }

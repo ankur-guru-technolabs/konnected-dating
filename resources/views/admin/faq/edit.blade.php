@@ -28,6 +28,21 @@
                                     @endif
                             </div>
                             <div class="row">
+                                <div class="input-group input-group-dynamic mb-2 focused is-focused">
+                                    <label class="form-label">Category</label>
+                                    <select name="category" class="form-control" style="padding: 9px;">
+                                        @foreach($categories as $cat)
+                                            <option value="{{$cat->id}}" {{($cat->id == $faqs->category_id) ? 'selected' : ''}}>{{$cat->name}}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @if($errors->has('category'))
+                                    <small class="text-danger" >
+                                        {{ $errors->first('category') }}
+                                    </small>
+                                @endif
+                            </div>
+                            <div class="row">
                                 <label class="form-label">Answer</label>
                                 <div class="input-group input-group-dynamic mb-4 focused is-focused">
                                     <textarea id="answer" name="answer" class="form-control validate" name="answer"  rows="5" placeholder="Answer" spellcheck="false">{{ $faqs->answer ?? ''}}</textarea>

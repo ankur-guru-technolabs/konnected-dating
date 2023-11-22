@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\BaseController;
 use App\Models\Age;
 use App\Models\Bodytype;
+use App\Models\Category;
 use App\Models\Children;
 use App\Models\ContactSupport;
 use App\Models\Coin;
@@ -563,25 +564,26 @@ class AdminController extends BaseController
         Subscription::where('id',$request->id)->update($insert_data);
         return redirect()->route('subscription.list')->with('message','Subscription updated Successfully'); 
     }
+     
+    // CATEGORY
 
-    // FAQ
-
-    public function faqList(){
-        $faqs = Faq::all();
-        return view('admin.faq.list',compact('faqs'));
+    public function categoryList(){
+        $categories = Category::all();
+        return view('admin.category.list',compact('categories'));
     }
 
-    public function faqEdit($id){
-        $faqs = Faq::where('id',$id)->first();
-        return view('admin.faq.edit',compact('faqs'));
+    public function categoryStore(Request $request){
+        $categories = new Category;
+        $categories->name = $request->name;
+        $categories->save();
+        return redirect()->route('category.list')->with('message','Category added Successfully'); 
     }
 
-    public function faqUpdate(Request $request){
+    public function categoryUpdate(Request $request){
 
         $validator = Validator::make($request->all(),[
             'id'=>"required",
-            'question'=>"required",
-            'answer'=>"required",
+            'name'=>"required",
         ]);
 
         if ($validator->fails())
@@ -590,8 +592,50 @@ class AdminController extends BaseController
         }
 
         $input = $request->all();
-        $insert_data['question']    = $input['question'];
+        $insert_data['name']    = $input['name'];
+
+        Category::where('id',$request->id)->update($insert_data);
+        return redirect()->route('category.list')->with('message','Category updated Successfully'); 
+    }
+
+    public function categoryDelete($id){
+        $categories = Category::findOrFail($id);
+        $categories->delete();
+        Faq::where('category_id',$id)->delete();
+        return redirect()->route('category.list')->with('message','Category deleted Successfully');
+    }
+
+    // FAQ
+
+    public function faqList(){
+        $faqs = Faq::with('category')->get();
+        return view('admin.faq.list',compact('faqs'));
+    }
+
+    public function faqEdit($id){
+        $faqs = Faq::where('id',$id)->first();
+        $categories = Category::all();
+        return view('admin.faq.edit',compact('faqs','categories'));
+    }
+
+    public function faqUpdate(Request $request){
+
+        $validator = Validator::make($request->all(),[
+            'id'=>"required",
+            'question'=>"required",
+            'answer'=>"required",
+            'category'=>"required",
+        ]);
+
+        if ($validator->fails())
+        {
+            return back()->withInput()->withErrors($validator);
+        }
+
+        $input = $request->all();
+        $insert_data['question']     = $input['question'];
         $insert_data['answer']       = $input['answer'];
+        $insert_data['category_id']  = $input['category'];
 
         Faq::where('id',$request->id)->update($insert_data);
         return redirect()->route('faq.list')->with('message','FAQ updated Successfully'); 

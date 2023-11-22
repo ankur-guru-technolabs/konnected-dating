@@ -7,6 +7,7 @@ use App\Http\Controllers\BaseController;
 use App\Http\Controllers\Api\AuthController;
 use App\Models\Age;
 use App\Models\Bodytype;
+use App\Models\Category;
 use App\Models\Chat;
 use App\Models\Children;
 use App\Models\ContactSupport;
@@ -1146,11 +1147,23 @@ class CustomerController extends BaseController
         return $this->error('Something went wrong','Something went wrong');
     }
 
+    // CATEGORY LIST
+
+    public function categoryList(Request $request){
+        try{
+            $data['category_data']  = Category::all();
+            return $this->success($data,'Category list');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
     // FAQ LIST
 
-    public function faqList(Request $request){
+    public function faqList(Request $request,$cat_id){
         try{
-            $data['faq_data']  = Faq::all();
+            $data['faq_data']  = Faq::where('category_id',$cat_id)->get();
             return $this->success($data,'Faq data');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');

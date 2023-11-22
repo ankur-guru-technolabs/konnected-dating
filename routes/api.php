@@ -57,7 +57,8 @@ Route::middleware('auth:api')->group(function () {
     Route::get('who-viewed-me', [CustomerController::class,'whoViewedMe'])->name('who-viewed-me');
     Route::get('who-likes-me', [CustomerController::class,'whoLikesMe'])->name('who-likes-me');
     Route::get('get-static-page', [CustomerController::class,'staticPage'])->name('get-static-page');
-    Route::get('get-faq-list', [CustomerController::class,'faqList'])->name('get-faq-list');
+    Route::get('get-category-list', [CustomerController::class,'categoryList'])->name('get-category-list');
+    Route::get('get-faq-list/{id}', [CustomerController::class,'faqList'])->name('get-faq-list');
     Route::get('review-later-list', [CustomerController::class,'reviewLaterList'])->name('review-later-list');
     Route::post('update-location', [CustomerController::class,'updateLocation'])->name('update-location');
     Route::post('single-video-call', [CustomerController::class,'singleVideoCall'])->name('single-video-call');

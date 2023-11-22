@@ -18,6 +18,7 @@
                                 <tr>
                                     <th>Id</th>
                                     <th>Question</th>
+                                    <th>Category</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -26,6 +27,7 @@
                                     <tr>
                                         <td>{{ ++$key }}</td>
                                         <td>{{$faq->question}}</td>
+                                        <td>{{$faq->category->name ?? "-"}}</td>
                                         <td>
                                             <a href="{{route('faq.faq-edit',['id' => $faq->id])}}">
                                                 <i class="material-icons opacity-10">edit</i>
