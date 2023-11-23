@@ -11,6 +11,13 @@
                         <h6 class="text-white text-capitalize ps-3">Faq Table</h6>
                     </div>
                 </div>
+                <div class="custom-margin-auto">
+                    <a href="{{route('faq.faq-add')}}">
+                        <button type="button" class="btn bg-gradient-primary mt-2 custom-button-class">
+                            Add FAQ
+                        </button>
+                    </a>
+                </div>
                 <div class="card-body px-0 pb-2">
                     <div class="table-responsive p-0 mx-3">
                         <table id="faq_list_table" class="display" style="width:100%">
@@ -31,6 +38,9 @@
                                         <td>
                                             <a href="{{route('faq.faq-edit',['id' => $faq->id])}}">
                                                 <i class="material-icons opacity-10">edit</i>
+                                            </a>
+                                            <a href="{{route('faq.faq-delete',['id' => $faq->id])}}">
+                                                <i class="material-icons opacity-10">delete</i>
                                             </a>
                                         </td>
                                     </tr>

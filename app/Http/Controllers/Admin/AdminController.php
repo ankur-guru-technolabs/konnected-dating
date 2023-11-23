@@ -612,6 +612,33 @@ class AdminController extends BaseController
         return view('admin.faq.list',compact('faqs'));
     }
 
+    public function faqAdd(){
+        $categories = Category::all();
+        return view('admin.faq.add',compact('categories'));
+    }
+
+    public function faqStore(Request $request){
+
+        $validator = Validator::make($request->all(),[
+            'question'=>"required",
+            'answer'=>"required",
+            'category'=>"required",
+        ]);
+
+        if ($validator->fails())
+        {
+            return back()->withInput()->withErrors($validator);
+        }
+
+        $input = $request->all();
+        $insert_data['question']     = $input['question'];
+        $insert_data['answer']       = $input['answer'];
+        $insert_data['category_id']  = $input['category'];
+
+        Faq::create($insert_data);
+        return redirect()->route('faq.list')->with('message','FAQ added Successfully'); 
+    }
+    
     public function faqEdit($id){
         $faqs = Faq::where('id',$id)->first();
         $categories = Category::all();
@@ -639,6 +666,11 @@ class AdminController extends BaseController
 
         Faq::where('id',$request->id)->update($insert_data);
         return redirect()->route('faq.list')->with('message','FAQ updated Successfully'); 
+    }
+
+    public function faqDelete($id){
+        Faq::where('id',$id)->delete();
+        return redirect()->route('faq.list')->with('message','FAQ deleted Successfully');
     }
 
     // COIN

@@ -149,8 +149,11 @@ Route::middleware(['admin'])->group(function () {
    
     Route::group(['prefix' => 'faq','as'=>'faq.'], function () {
         Route::get('list', [AdminController::class, 'faqList'])->name('list');
+        Route::get('add', [AdminController::class, 'faqAdd'])->name('faq-add');
+        Route::post('store', [AdminController::class, 'faqStore'])->name('faq-store');
         Route::get('faq-edit/{id}', [AdminController::class, 'faqEdit'])->name('faq-edit');
         Route::post('faq-update', [AdminController::class, 'faqUpdate'])->name('faq-update');
+        Route::get('faq-delete/{id}', [AdminController::class, 'faqDelete'])->name('faq-delete');
     });
 
     Route::group(['prefix' => 'coin','as'=>'coin.'], function () {
