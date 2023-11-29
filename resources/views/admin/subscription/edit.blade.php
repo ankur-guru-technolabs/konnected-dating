@@ -185,12 +185,12 @@
                                 </div>
                                 <div class="col-6 pt-3">
                                     <div class="input-group input-group-dynamic mb-2 focused is-focused">
-                                        <label class="form-label">Coin</label>
-                                        <input type="number" class="form-control" value="{{$subscription->coin ?? ''}}" name="coin" autocomplete="off"  step="any">
+                                        <label class="form-label">Price</label>
+                                        <input type="number" class="form-control" value="{{$subscription->price ?? ''}}" name="price" autocomplete="off"  step="any">
                                     </div>
-                                    @if($errors->has('coin'))
+                                    @if($errors->has('price'))
                                         <small class="text-danger" >
-                                            {{ $errors->first('coin') }}
+                                            {{ $errors->first('price') }}
                                         </small>
                                     @endif
                                 </div>

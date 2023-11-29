@@ -535,7 +535,7 @@ class AdminController extends BaseController
             'read_receipt' => "required",
             'travel_mode' => "required",
             'profile_badge' => "required",
-            'coin' => "required",
+            'price' => "required",
             'month'=>"required",
             'plan_duration'=>"required"
         ]);
@@ -557,7 +557,7 @@ class AdminController extends BaseController
         $insert_data['read_receipt']      = $input['read_receipt'];
         $insert_data['travel_mode']       = $input['travel_mode'];
         $insert_data['profile_badge']     = $input['profile_badge'];
-        $insert_data['coin']              = $input['coin'];
+        $insert_data['price']             = $input['price'];
         $insert_data['month']             = $input['month'];
         $insert_data['plan_duration']     = $input['plan_duration'];
         

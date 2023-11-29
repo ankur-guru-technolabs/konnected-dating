@@ -1501,13 +1501,13 @@ class CustomerController extends BaseController
             $user_id = Auth::id();
             $today_date = date('Y-m-d');
             $is_purchased = UserSubscription::where('user_id',$user_id)->whereDate('expire_date','>=',$today_date)->latest()->first();
-            $total_balance = UserCoin::where('receiver_id', Auth::id())
-            ->orWhere('sender_id', Auth::id())
-            ->whereIn('type', ['purchase_coin', 'gift_card_receive', 'purchase_plan', 'gift_card_sent'])
-            ->selectRaw('SUM(CASE WHEN receiver_id = ? AND type IN ("purchase_coin", "gift_card_receive") THEN coins_number ELSE 0 END) 
-                        - SUM(CASE WHEN sender_id = ? AND type IN ("purchase_plan", "gift_card_sent") THEN coins_number ELSE 0 END) 
-                        AS total_balance', [Auth::id(), Auth::id()])
-                        ->value('total_balance') ?? 0;
+            // $total_balance = UserCoin::where('receiver_id', Auth::id())
+            // ->orWhere('sender_id', Auth::id())
+            // ->whereIn('type', ['purchase_coin', 'gift_card_receive', 'purchase_plan', 'gift_card_sent'])
+            // ->selectRaw('SUM(CASE WHEN receiver_id = ? AND type IN ("purchase_coin", "gift_card_receive") THEN coins_number ELSE 0 END) 
+            //             - SUM(CASE WHEN sender_id = ? AND type IN ("purchase_plan", "gift_card_sent") THEN coins_number ELSE 0 END) 
+            //             AS total_balance', [Auth::id(), Auth::id()])
+            //             ->value('total_balance') ?? 0;
                         
             
             $plan_data = Subscription::where('id',$request->subscription_id)->first();
@@ -1518,9 +1518,9 @@ class CustomerController extends BaseController
                 $expire_date = date('Y-m-d H:i:s', strtotime($is_purchased->expire_date. ' +'.$plan_data->plan_duration.' days'));
             } 
 
-            if($total_balance < $plan_data->coin){
-                return $this->error("Sorry, but you don't have enough coins to purchase this plan.","Sorry, but you don't have enough coins to purchase this plan.");
-            };
+            // if($total_balance < $plan_data->coin){
+            //     return $this->error("Sorry, but you don't have enough coins to purchase this plan.","Sorry, but you don't have enough coins to purchase this plan.");
+            // };
                         
             $user_subscription                  =  new UserSubscription();
             $user_subscription->user_id         =  $user_id; 
@@ -1538,21 +1538,21 @@ class CustomerController extends BaseController
             $user_subscription->read_receipt    =  $plan_data->read_receipt;
             $user_subscription->travel_mode     =  $plan_data->travel_mode;
             $user_subscription->profile_badge   =  $plan_data->profile_badge;
-            $user_subscription->coin            =  $plan_data->coin;   
+            $user_subscription->price           =  $plan_data->price;   
             $user_subscription->month           =  $plan_data->month; 
             $user_subscription->plan_duration   =  $plan_data->plan_duration; 
             $user_subscription->plan_type       =  $plan_data->plan_type; 
             $user_subscription->save(); 
 
 
-            $user_coin = new UserCoin();
-            $user_coin->sender_id       = Auth::id();
-            $user_coin->receiver_id     = 0;
-            $user_coin->coins_number    = $plan_data->coin;
-            $user_coin->message         = "Purchased ".$plan_data->title;
-            $user_coin->type            = "purchase_plan";
-            $user_coin->action          = '-'. $plan_data->coin;
-            $user_coin->save();
+            // $user_coin = new UserCoin();
+            // $user_coin->sender_id       = Auth::id();
+            // $user_coin->receiver_id     = 0;
+            // $user_coin->coins_number    = $plan_data->coin;
+            // $user_coin->message         = "Purchased ".$plan_data->title;
+            // $user_coin->type            = "purchase_plan";
+            // $user_coin->action          = '-'. $plan_data->coin;
+            // $user_coin->save();
 
             // Arpita mem
 
