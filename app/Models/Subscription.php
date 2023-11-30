@@ -21,7 +21,7 @@ class Subscription extends Model
         'read_receipt',
         'travel_mode',
         'profile_badge',
-        'coin',
+        'price',
         'month',
         'plan_duration',
         'plan_type',

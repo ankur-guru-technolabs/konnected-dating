@@ -27,8 +27,8 @@ return new class extends Migration
             $table->string('travel_mode')->nullable();
             $table->string('profile_badge')->nullable();
             // $table->string('message_per_match')->nullable();
-            $table->string('coin');
-            // $table->string('price');
+            // $table->string('coin');
+            $table->string('price');
             // $table->string('currency_code');
             $table->integer('month');
             $table->integer('plan_duration')->nullable();

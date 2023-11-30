@@ -30,7 +30,7 @@ return new class extends Migration
             $table->string('read_receipt')->nullable();
             $table->string('travel_mode')->nullable();
             $table->string('profile_badge')->nullable();
-            $table->string('coin');
+            $table->string('price');
             $table->string('currency_code');
             $table->integer('month');
             $table->integer('plan_duration')->nullable();

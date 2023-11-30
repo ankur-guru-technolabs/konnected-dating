@@ -25,7 +25,7 @@ class UserSubscription extends Model
         'read_receipt',
         'travel_mode',
         'profile_badge',
-        'coin',
+        'price',
         'currency_code',
         'month',
         'plan_duration',
