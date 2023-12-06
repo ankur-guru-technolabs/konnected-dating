@@ -257,7 +257,7 @@ class AuthController extends BaseController
                 return $this->error($validateData->errors(),'Validation error',403);
             } 
 
-            $findUser = User::where('google_id', $request->social_id)->orWhere('facebook_id',$request->social_id)->first();
+            $findUser = User::where('google_id', $request->social_id)->orWhere('facebook_id',$request->social_id)->orWhere('apple_id',$request->social_id)->first();
             if($findUser){
                 $findUser->tokens()->delete();
                 $findUser->fcm_token = $request->fcm_token;
@@ -362,7 +362,7 @@ class AuthController extends BaseController
                 return $this->error($validateData->errors(),'Validation error',403);
             } 
 
-            if(!isset($request->google_id) && !isset($request->facebook_id)){
+            if(!isset($request->google_id) && !isset($request->facebook_id) && !isset($request->apple_id)){
                 $this->sendOtp($request);
             }
             $input                   = $request->all();
@@ -426,13 +426,13 @@ class AuthController extends BaseController
 
                 // UserPhoto::insert($user_photo_data); 
 
-                if(!isset($request->google_id) && !isset($request->facebook_id)){
+                if(!isset($request->google_id) && !isset($request->facebook_id) && !isset($request->apple_id)){
                     $temp         = Temp::where('key',$request->email)->first();
                     if($temp != null){
                         $user_data['otp'] = (int)$temp->value; 
                     }
                 }
-                if(isset($request->google_id) || isset($request->facebook_id)){
+                if(isset($request->google_id) || isset($request->facebook_id) || isset($request->apple_id)){
                    // Notification for welcome
 
                    $title = "Welcome to Konnected App";

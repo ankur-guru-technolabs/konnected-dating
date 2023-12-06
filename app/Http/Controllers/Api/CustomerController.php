@@ -128,7 +128,7 @@ class CustomerController extends BaseController
             }])->find($id);
             
             if(isset($request->id)){
-                $data['user']->makeHidden(['google_id','facebook_id']);
+                $data['user']->makeHidden(['google_id','facebook_id','apple_id']);
             } 
 
             if(!empty($data['user']) && !empty($data['user']['iceBreakers'])){

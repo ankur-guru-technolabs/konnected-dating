@@ -48,6 +48,7 @@ return new class extends Migration
             $table->string('fcm_token')->nullable();
             $table->string('google_id')->nullable();
             $table->string('facebook_id')->nullable();
+            $table->string('apple_id')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable();
             $table->rememberToken();
