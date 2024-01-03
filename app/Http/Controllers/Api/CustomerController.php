@@ -1411,10 +1411,10 @@ class CustomerController extends BaseController
 
     public function notificationList(Request $request){
         try{
-            $notification_id  = Notification::where('receiver_id',Auth::id())->orderBy('id','desc')->take(30)->pluck('id')->toArray();
-            Notification::whereNotIn('id', $notification_id)->where('receiver_id',Auth::id())->delete();
+            // $notification_id  = Notification::where('receiver_id',Auth::id())->orderBy('id','desc')->take(30)->pluck('id')->toArray();
+            // Notification::whereNotIn('id', $notification_id)->where('receiver_id',Auth::id())->delete();
 
-            $notification_data  = Notification::where('receiver_id',Auth::id())->orderBy('id','desc')->take(30)->get();
+            $notification_data  = Notification::where('receiver_id',Auth::id())->orderBy('id','desc')->paginate($request->input('perPage'), ['*'], 'page', $request->input('page'));
             $data['notification_data'] = $notification_data->map(function ($notification){
                 $date = date('d/m/Y', strtotime($notification->created_at));
 
