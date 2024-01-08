@@ -390,12 +390,37 @@ class AuthController extends BaseController
             
                 $question_new = [];
                 foreach($input['questions'] as $question){
-                    $question['user_id']        = $user_data->id;
-                    $question['question_id']    = $question['question_id'];
-                    $question['answer_id']      = $question['answer_id'];
-                    $question['created_at'] = now();
-				    $question['updated_at'] = now();
-                    $question_new[] = $question;
+                    // $question['user_id']        = $user_data->id;
+                    // $question['question_id']    = $question['question_id'];
+                    // $question['answer_id']      = $question['answer_id'];
+                    // $question['created_at'] = now();
+				    // $question['updated_at'] = now();
+                    // $question_new[] = $question;
+                    $user_id = $user_data->id;
+                    $question_id = $question['question_id'];
+
+                    if (strpos($question['answer_id'], ',') !== false) {
+                        // If it is, split the values and create separate entries
+                        $answer_ids = explode(',', $question['answer_id']);
+                        foreach ($answer_ids as $answer_id) {
+                            $question_new[] = [
+                                'user_id' => $user_id,
+                                'question_id' => $question_id,
+                                'answer_id' => $answer_id,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ];
+                        }
+                    } else {
+                        $question_new[] = [
+                            'user_id' => $user_id,
+                            'question_id' => $question_id,
+                            'answer_id' => $question['answer_id'],
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
+                    }
+
                     // UserQuestion::create($question);
                 }
                 UserQuestion::insert($question_new);
