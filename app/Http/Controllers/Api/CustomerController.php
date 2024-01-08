@@ -344,7 +344,23 @@ class CustomerController extends BaseController
                 foreach($request['questions'] as $question){
                     $user_question_data = UserQuestion::where('user_id',$request->user_id)->where('question_id', $question['question_id'])->first();
                     if($user_question_data){
-                        $user_question_data->update(['answer_id'=> $question['answer_id']]);
+                        if (strpos($question['answer_id'], ',') !== false) {
+                            $user_question_data = UserQuestion::where('user_id',$request->user_id)->where('question_id', $question['question_id'])->delete();
+                            $answer_ids = explode(',', $question['answer_id']);
+                            $question_new = [];
+                            foreach ($answer_ids as $answer_id) {
+                                $question_new[] = [
+                                    'user_id' => Auth::id(),
+                                    'question_id' => $question['question_id'],
+                                    'answer_id' => $answer_id,
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ];
+                            }
+                            UserQuestion::insert($question_new);
+                        }else{
+                            $user_question_data->update(['answer_id'=> $question['answer_id']]);
+                        }
                     }
                 }
                 
