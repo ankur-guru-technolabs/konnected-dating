@@ -85,6 +85,9 @@ class CustomerController extends BaseController
             }
 
             $data = User::find($user_id);
+            if(isset($request->google_id) || isset($request->facebook_id) || isset($request->apple_id)){
+                $data['token'] = $data->createToken('Auth token')->accessToken;
+            }
             $temp_data = Temp::where('key',$data->email)->first();
             if(!empty($temp_data)){
                 $data['otp'] = (int)$temp_data->value;
