@@ -463,6 +463,7 @@ class AuthController extends BaseController
                    $title = "Welcome to Konnected App";
                    $message = "Welcome to Konnected App"; 
                    Helper::send_notification('single', 0, $user_data->id, $title, 'welcome', $message, []);
+                   $user_data['token'] = $user_data->createToken('Auth token')->accessToken;
                 }
                 return $this->success($user_data,'You are successfully registered');
             }
