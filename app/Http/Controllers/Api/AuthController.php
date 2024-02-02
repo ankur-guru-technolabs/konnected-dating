@@ -298,7 +298,7 @@ class AuthController extends BaseController
             $data['question']   = Question::with('SubQuestions')->get();
             $data['salary']     = Salary::all();
             $data['min_height'] = 6;
-            $data['max_height'] = 25;
+            $data['max_height'] = 37;
             $data['min_age']    = 4;
             $data['max_age']    = 63;
             return $this->success($data,'Registration form data');
