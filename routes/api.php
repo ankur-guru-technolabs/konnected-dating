@@ -69,6 +69,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('notification-setting', [CustomerController::class,'notificationSetting'])->name('notification-setting');
     Route::get('subscription-list', [CustomerController::class,'subscriptionList'])->name('subscription-list');
     Route::post('purchase-subscription', [CustomerController::class,'purchaseSubscription'])->name('purchase-subscription');
+    Route::post('purchase-from-apple', [CustomerController::class,'purchaseFromApple'])->name('purchase-from-apple');
     Route::get('active-subscription-list', [CustomerController::class,'activeSubscriptionList'])->name('active-subscription-list');
     Route::get('subscription-history', [CustomerController::class,'subscriptionHistory'])->name('subscription-history');
     Route::get('get-coin-list', [CustomerController::class,'coinList'])->name('get-coin-list');

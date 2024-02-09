@@ -39,6 +39,7 @@ use App\Models\UserView;
 use App\Models\UserReport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use DateTime;
 use Exception;
 use Helper;
 use Validator;
@@ -1561,6 +1562,8 @@ class CustomerController extends BaseController
             $user_subscription->month           =  $plan_data->month; 
             $user_subscription->plan_duration   =  $plan_data->plan_duration; 
             $user_subscription->plan_type       =  $plan_data->plan_type; 
+            $user_subscription->google_plan_id  =  $plan_data->google_plan_id; 
+            $user_subscription->apple_plan_id   =  $plan_data->apple_plan_id; 
             $user_subscription->save(); 
 
 
@@ -1605,12 +1608,104 @@ class CustomerController extends BaseController
         return $this->error('Something went wrong','Something went wrong');
     }
 
+    // PURCHASE FROM APPLE 
+
+    public function purchaseFromApple(Request $request){
+        try{
+
+            $validateData = Validator::make($request->all(), [
+                'product_id' => 'required',
+                'receipt_data' => 'required',
+            ]);
+
+            if ($validateData->fails()) {
+                return $this->error($validateData->errors(),'Validation error',403);
+            }
+
+            $user_id = Auth::id();
+            $today_date = date('Y-m-d H:i:s');
+            
+            // if(UserSubscription::where('user_id',$user_id)->where('expire_date','>',$today_date)->count() > 0){
+            //     return $this->error('You have already purchased plan','You have already purchased plan');
+            // }
+            try{
+                $response = \Http::post('https://sandbox.itunes.apple.com/verifyReceipt', [
+                    'receipt-data' => $request->receipt_data,
+                    'password' => env('APPLE_PLAY_SECRET', '85daa2e3306e4ec0902b46b1882cf2dd'),
+                    'exclude-old-transactions' => true,
+                ]);
+                $verificationResult = $response->json();
+            }catch(\Exception $e){
+                return $this->error('Unable to proceed payment','Unable to proceed payment');
+            } 
+
+            if(isset($verificationResult['latest_receipt_info'])){
+                $time = $verificationResult['latest_receipt_info'][0]['expires_date_ms']/1000;
+                $exp = new DateTime("@$time"); 
+                $plan_data = Subscription::where('apple_plan_id',$request->product_id)->first();
+
+                $is_purchased = UserSubscription::where('user_id',$user_id)->whereDate('expire_date','>=',$today_date)->latest()->first();
+                if($is_purchased !== null){
+                    // IT IS CHECK IF PLAN EXIST THEN TAKE EXPIRE DATE OF THAT PLAN AND ADD ONE DAY IN THAT DATE AND CONSIDER AS START DATE OF NEW PLAN 
+                    $plan_start_date = date('Y-m-d H:i:s', strtotime($is_purchased->expire_date. ' +1 days'));
+                    $expire_date = date('Y-m-d H:i:s', strtotime($is_purchased->expire_date. ' +'.$plan_data->plan_duration.' days'));
+                }else{
+                    $expire_date = $exp->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d H:i:s') ?? Date('Y-m-d H:i:s', strtotime('+'.$plan_data->plan_duration. 'days')); 
+                } 
+
+                $user_subscription                  = new UserSubscription();
+                $user_subscription->user_id         =  $user_id; 
+                $user_subscription->subscription_id =  $plan_data->id; 
+                $user_subscription->start_date      =  $plan_start_date ?? Date('Y-m-d H:i:s'); 
+                $user_subscription->expire_date     =  $expire_date; 
+                $user_subscription->title           =  $plan_data->title; 
+                $user_subscription->description     =  $plan_data->description;
+                $user_subscription->search_filters  =  $plan_data->search_filters;
+                $user_subscription->like_per_day    =  $plan_data->like_per_day;
+                $user_subscription->video_call      =  $plan_data->video_call;
+                $user_subscription->who_like_me     =  $plan_data->who_like_me;
+                $user_subscription->who_view_me     =  $plan_data->who_view_me;
+                $user_subscription->undo_profile    =  $plan_data->undo_profile;
+                $user_subscription->read_receipt    =  $plan_data->read_receipt;
+                $user_subscription->travel_mode     =  $plan_data->travel_mode;
+                $user_subscription->profile_badge   =  $plan_data->profile_badge;
+                $user_subscription->price           =  $plan_data->price;   
+                $user_subscription->month           =  $plan_data->month; 
+                $user_subscription->plan_duration   =  $plan_data->plan_duration; 
+                $user_subscription->plan_type       =  $request->plan_type ?? $plan_data->plan_type; 
+                $user_subscription->apple_plan_id   =  $plan_data->apple_plan_id; 
+                $user_subscription->order_id        =  $verificationResult['latest_receipt_info'][0]['original_transaction_id']; 
+                $user_subscription->save(); 
+ 
+                // Notification for subscription purchase
+
+                $title = $plan_data->title." purchased successfully";
+                $message = $plan_data->title." purchased successfully"; 
+                Helper::send_notification('single', 0, Auth::id(), $title, 'subscription_purchase', $message, []);
+                return $this->success([],'Subscription purchased successfully');
+            }
+            return $this->error('Something went wrong','Something went wrong');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
     // ACTIVE SUBSCRIPTION LISTING
     
     public function activeSubscriptionList(Request $request){
         try{
             $user_id = Auth::id();
             $today_date = date('Y-m-d');
+            $all_purchased = UserSubscription::where('user_id',$user_id)->whereDate('expire_date','>=',$today_date)->get();
+            foreach($all_purchased as $purchased){
+                if($purchased->google_plan_id && $purchased->order_id){
+                    Helper::googlePlanStatusCheck($purchased->google_plan_id,$purchased->order_id);
+                }
+                if($purchased->apple_plan_id && $purchased->order_id){
+                    Helper::applePlanStatusCheck($purchased->order_id);
+                }
+            }
             $is_purchased = UserSubscription::where('user_id',$user_id)->whereDate('expire_date','>=',$today_date)->orderby('id','asc')->first();
             if($is_purchased != null){
                 $data= $is_purchased;
