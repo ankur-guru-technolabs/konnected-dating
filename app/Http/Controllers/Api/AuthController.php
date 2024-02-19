@@ -370,9 +370,9 @@ class AuthController extends BaseController
             $input['user_type']      = 'user';
             $input['phone_verified'] = 1;
             $input['email_verified'] = 0;
-            // if(isset($request->google_id) || isset($request->facebook_id)){
-            //     $input['email_verified'] = 1;
-            // }
+             if(isset($request->google_id) || isset($request->facebook_id)){
+                $input['email_verified'] = 1;
+             }
             $input['google_id']      = isset($request->google_id) ? $request->google_id : null;
 
             $user_data  = User::create($input);
