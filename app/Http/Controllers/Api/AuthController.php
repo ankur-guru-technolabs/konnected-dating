@@ -271,6 +271,7 @@ class AuthController extends BaseController
                     return $this->error('Email already exist','Email already exist');
                 }
                 $data['social_id']   = $request->social_id;
+                $data['email_verified'] = 1 ;
                 return $this->success($data,'Signup successfully');
             }
         }catch(Exception $e){
