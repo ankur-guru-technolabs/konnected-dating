@@ -474,8 +474,15 @@ class CustomerController extends BaseController
            
             $input['can_chat'] = 1;
             $oppsite_user_gender = User::where('id',$input['like_to'])->select('gender')->first();
+            $check_female_gender = '';
             if(Auth::user()->gender != $oppsite_user_gender->gender){
                 $input['can_chat'] = 0;
+                if($oppsite_user_gender->gender == 2){
+                    $check_female_gender = 'oppsite_user_gender';
+                }
+                if(Auth::user()->gender == 2){
+                    $check_female_gender = 'auth_user_gender';
+                }
             } 
             
             if($opposite_request && $input['status'] == 1){
@@ -516,6 +523,16 @@ class CustomerController extends BaseController
                 $message = "Congrats! You have a match with ". $receiver_data->full_name; 
                 $data_for_sender = array('match_id' => $input['match_id'],'sender_id'=> Auth::id(),'sender_name' => Auth::user()->full_name,'sender_image'=> $sender_image,'receiver_id'=> (int)$input['like_to'],'receiver_name' => $receiver_data->full_name,'receiver_image'=> $receiver_image,'can_chat' => 0);
                 Helper::send_notification('single', $input['like_to'], Auth::id(), $title, 'match', $message, $data_for_sender);
+               
+                if($check_female_gender != ''){
+                    $title = "Match Time!";
+                    $message = "You've got a chat request to approve."; 
+                    if($check_female_gender = 'auth_user_gender'){
+                        Helper::send_notification('single', 0, Auth::id(), $title, 'reminder_allow_chat', $message, []);
+                    }else{
+                        Helper::send_notification('single', 0, $oppsite_user_gender->gender, $title, 'reminder_allow_chat', $message, []);
+                    }
+                }
             }
 
             if(!$same_request){
