@@ -538,7 +538,7 @@ class CustomerController extends BaseController
                     if($check_female_gender == 'auth_user_gender'){
                         Helper::send_notification('single', 0, Auth::id(), $title, 'reminder_allow_chat', $message, $custom);
                     }else{
-                        Helper::send_notification('single', 0, $oppsite_user_gender->gender, $title, 'reminder_allow_chat', $message, $custom);
+                        Helper::send_notification('single', 0, $input['like_to'], $title, 'reminder_allow_chat', $message, $custom);
                     }
                 }
             }
