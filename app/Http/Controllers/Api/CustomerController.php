@@ -524,13 +524,21 @@ class CustomerController extends BaseController
                 $data_for_sender = array('match_id' => $input['match_id'],'sender_id'=> Auth::id(),'sender_name' => Auth::user()->full_name,'sender_image'=> $sender_image,'receiver_id'=> (int)$input['like_to'],'receiver_name' => $receiver_data->full_name,'receiver_image'=> $receiver_image,'can_chat' => 0);
                 Helper::send_notification('single', $input['like_to'], Auth::id(), $title, 'match', $message, $data_for_sender);
                
+                $custom = [
+                    'sender_id'     =>  Auth::id(),
+                    'match_id'      =>  $input['match_id'],
+                    'sender_name'   =>  Auth::user()->full_name,
+                    'sender_image'  =>  $sender_image,
+                    'image'         =>  $sender_image,
+                ]; 
+
                 if($check_female_gender != ''){
                     $title = "Match Time!";
                     $message = "You've got a chat request to approve."; 
                     if($check_female_gender = 'auth_user_gender'){
-                        Helper::send_notification('single', 0, Auth::id(), $title, 'reminder_allow_chat', $message, []);
+                        Helper::send_notification('single', 0, Auth::id(), $title, 'reminder_allow_chat', $message, $custom);
                     }else{
-                        Helper::send_notification('single', 0, $oppsite_user_gender->gender, $title, 'reminder_allow_chat', $message, []);
+                        Helper::send_notification('single', 0, $oppsite_user_gender->gender, $title, 'reminder_allow_chat', $message, $custom);
                     }
                 }
             }
