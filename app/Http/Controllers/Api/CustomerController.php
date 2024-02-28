@@ -533,7 +533,7 @@ class CustomerController extends BaseController
                 ]; 
 
                 if($check_female_gender != ''){
-                    $title = "Match Time!";
+                    $title = "You've got a chat request to approve.";
                     $message = "You've got a chat request to approve."; 
                     if($check_female_gender = 'auth_user_gender'){
                         Helper::send_notification('single', 0, Auth::id(), $title, 'reminder_allow_chat', $message, $custom);
