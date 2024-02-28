@@ -74,7 +74,7 @@ class Helper {
                 "registration_ids" => $notification_id,
                 "notification" => [
                     "title" => $title,
-                    // "body" => $message,  
+                    "body" => $message,  
                     "type" => $type,
                     "sender_id" => $sender_id,
                     "receiver_id" => $receiver_id,
@@ -84,7 +84,7 @@ class Helper {
                 ],
                 "data" => [
                     "title" => $title,
-                    // "body" => $message,  
+                    "body" => $message,  
                     "type" => $type,
                     "sender_id" => $sender_id,
                     "receiver_id" => $receiver_id,
