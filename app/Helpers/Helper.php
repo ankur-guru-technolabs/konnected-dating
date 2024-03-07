@@ -7,6 +7,7 @@ use App\Mail\SubscriptionExpireMail;
 use App\Models\Notification;
 use App\Models\User;
 use App\Models\UserSubscription;
+use App\Services\GooglePlayService;
 use Auth;
 
 class Helper {
@@ -199,6 +200,19 @@ class Helper {
             }
         });
 
+        return true;
+    }
+
+    public static function googlePlanStatusCheck($productId,$purchaseToken){
+        $googlePlayService = new GooglePlayService();
+         
+        $result = $googlePlayService->verifyPurchase($productId, $purchaseToken);
+        if($result->orderId){ 
+            $time = $result->expiryTimeMillis/1000;
+            $exp = new \DateTime("@$time"); 
+            $date = $exp->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d H:i:s') ?? Date('Y-m-d H:i:s', strtotime('+'.$plan_data->plan_duration. 'days')); 
+            $is_purchased = UserSubscription::where('user_id',Auth::id())->update(['expire_date' => $date]);
+        }
         return true;
     }
 

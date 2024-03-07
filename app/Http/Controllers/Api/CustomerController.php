@@ -46,6 +46,7 @@ use Validator;
 use DB;
 use Laravel\Ui\Presets\React;
 use App\Lib\RtcTokenBuilder;
+use App\Services\GooglePlayService;
 use App\Models\UserSubscription;
 use Carbon\Carbon;
 
@@ -1627,6 +1628,89 @@ class CustomerController extends BaseController
             $data['profile_badge']  = $plan_data->profile_badge;
             return $this->success($data,'Subscription purchased successfully');
             // return $this->error('You have already purchased plan','You have already purchased plan');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
+    // PURCHASE FROM GOOGLE SUBSCRIPTION
+
+    public function purchaseFromGoogle(Request $request){
+        try{
+
+            $validateData = Validator::make($request->all(), [
+                'product_id' => 'required',
+                'purchase_token' => 'required',
+            ]);
+
+            if ($validateData->fails()) {
+                return $this->error($validateData->errors(),'Validation error',403);
+            }
+
+            $productId = $request->product_id;            
+            $purchaseToken = $request->purchase_token;            
+            $googlePlayService = new GooglePlayService();
+
+            $user_id = Auth::id();
+            $today_date = date('Y-m-d H:i:s');
+
+            // if(UserSubscription::where('user_id',$user_id)->where('expire_date','>',$today_date)->count() > 0){
+            //     return $this->error('You have already purchased plan','You have already purchased plan');
+            // }
+
+            try{
+                $result = $googlePlayService->verifyPurchase($productId, $purchaseToken); 
+            }catch(\Exception $e){
+                return $this->error('Unable to proceed payment','Unable to proceed payment');
+            } 
+
+            if($result->orderId){ 
+                $time = $result->expiryTimeMillis/1000;
+                $exp = new DateTime("@$time"); 
+
+                $plan_data = Subscription::where('google_plan_id',$request->product_id)->first();
+                $is_purchased = UserSubscription::where('user_id',$user_id)->whereDate('expire_date','>=',$today_date)->latest()->first();
+                if($is_purchased !== null){
+                    // IT IS CHECK IF PLAN EXIST THEN TAKE EXPIRE DATE OF THAT PLAN AND ADD ONE DAY IN THAT DATE AND CONSIDER AS START DATE OF NEW PLAN 
+                    $plan_start_date = date('Y-m-d H:i:s', strtotime($is_purchased->expire_date. ' +1 days'));
+                    $expire_date = date('Y-m-d H:i:s', strtotime($is_purchased->expire_date. ' +'.$plan_data->plan_duration.' days'));
+                }else{
+                    $expire_date = $exp->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d H:i:s') ?? Date('Y-m-d H:i:s', strtotime('+'.$plan_data->plan_duration. 'days')); 
+                }   
+
+                $user_subscription                  = new UserSubscription();
+                $user_subscription->user_id         =  $user_id; 
+                $user_subscription->subscription_id =  $plan_data->id; 
+                $user_subscription->start_date      =  $plan_start_date ?? Date('Y-m-d H:i:s'); 
+                $user_subscription->expire_date     =  $expire_date; 
+                $user_subscription->title           =  $plan_data->title; 
+                $user_subscription->description     =  $plan_data->description;
+                $user_subscription->search_filters  =  $plan_data->search_filters;
+                $user_subscription->like_per_day    =  $plan_data->like_per_day;
+                $user_subscription->video_call      =  $plan_data->video_call;
+                $user_subscription->who_like_me     =  $plan_data->who_like_me;
+                $user_subscription->who_view_me     =  $plan_data->who_view_me;
+                $user_subscription->undo_profile    =  $plan_data->undo_profile;
+                $user_subscription->read_receipt    =  $plan_data->read_receipt;
+                $user_subscription->travel_mode     =  $plan_data->travel_mode;
+                $user_subscription->profile_badge   =  $plan_data->profile_badge;
+                $user_subscription->price           =  $plan_data->price;   
+                $user_subscription->month           =  $plan_data->month; 
+                $user_subscription->plan_duration   =  $plan_data->plan_duration; 
+                $user_subscription->plan_type       =  $request->plan_type ?? $plan_data->plan_type; 
+                $user_subscription->google_plan_id  =  $plan_data->google_plan_id; 
+                $user_subscription->order_id        =  $purchaseToken; 
+                $user_subscription->save(); 
+
+                // Notification for subscription purchase
+
+                $title = $plan_data->title." purchased successfully";
+                $message = $plan_data->title." purchased successfully"; 
+                Helper::send_notification('single', 0, Auth::id(), $title, 'subscription_purchase', $message, []);
+                return $this->success([],'Subscription purchased successfully');
+            }
+            return $this->error('Something went wrong','Something went wrong');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
         }
