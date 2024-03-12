@@ -12,6 +12,8 @@ class Coin extends Model
     protected $fillable = [
         'coins',
         'price',
+        'google_plan_id',
+        'apple_plan_id',
     ];
 
     protected $casts = [

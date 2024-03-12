@@ -17,6 +17,8 @@ return new class extends Migration
             $table->id();
             $table->string('coins');
             $table->string('price');
+            $table->string('google_plan_id');
+            $table->string('apple_plan_id');
             $table->timestamps();
         });
     }

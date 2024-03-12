@@ -686,8 +686,10 @@ class AdminController extends BaseController
     
     public function coinStore(Request $request){
         $coin = new Coin;
-        $coin->coins = $request->coins;
-        $coin->price = $request->price;
+        $coin->coins           = $request->coins;
+        $coin->price           = $request->price;
+        $coin->google_plan_id  = $request->google_plan_id;
+        $coin->apple_plan_id   = $request->apple_plan_id;
         $coin->save();
         return redirect()->route('coin.list')->with('message','Coin added Successfully'); 
     }
@@ -695,8 +697,10 @@ class AdminController extends BaseController
     public function coinUpdate(Request $request){
         $coin = Coin::find($request->id);
         if ($coin) {
-            $coin->coins = $request->coins;
-            $coin->price = $request->price;
+            $coin->coins           = $request->coins;
+            $coin->price           = $request->price;
+            $coin->google_plan_id  = $request->google_plan_id;
+            $coin->apple_plan_id   = $request->apple_plan_id;
             $coin->save();
         } 
         return redirect()->route('coin.list')->with('message','Coin updated Successfully'); 

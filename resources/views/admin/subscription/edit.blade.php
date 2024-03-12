@@ -76,7 +76,7 @@
                             <div class="row">
                                 <div class="col-6 pt-3">
                                     <div class="input-group input-group-dynamic mb-2 focused is-focused">
-                                        <label class="form-label">Google plan id </label>
+                                        <label class="form-label">Google Plan Id </label>
                                         <input type="text" class="form-control onlyread" value="{{$subscription->google_plan_id ?? ''}}" name="google_plan_id" autocomplete="off" readonly="readonly" data-bs-toggle="tooltip" data-bs-placement="top" title="Not editable" data-container="body" data-animation="true">
                                     </div>
                                     @if($errors->has('google_plan_id'))
@@ -87,7 +87,7 @@
                                 </div>
                                 <div class="col-6 pt-3">
                                     <div class="input-group input-group-dynamic mb-2 focused is-focused">
-                                        <label class="form-label">Apple plan id </label>
+                                        <label class="form-label">Apple Plan Id </label>
                                         <input type="text" class="form-control onlyread" value="{{$subscription->apple_plan_id ?? ''}}" name="apple_plan_id" autocomplete="off" readonly="readonly" data-bs-toggle="tooltip" data-bs-placement="top" title="Not editable" data-container="body" data-animation="true">
                                     </div>
                                     @if($errors->has('apple_plan_id'))
