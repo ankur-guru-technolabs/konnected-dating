@@ -27,6 +27,7 @@ Route::post('verify-otp', [AuthController::class, 'verifyOtp'])->name('verify-ot
 Route::get('get-registration-form-data', [AuthController::class, 'getRegistrationFormData'])->name('get-registration-form-data');
 Route::post('register', [AuthController::class, 'register'])->name('register');
 Route::post('email-exist', [AuthController::class, 'emailExist'])->name('email-exist');
+Route::post('check-device-token', [AuthController::class, 'checkDeviceToken'])->name('check-device-token');
  
 // FOR GOOGLE/FACEBOOK CURRENTLY THIS IS NOT USED {google,facebook}
 

@@ -520,4 +520,30 @@ class AuthController extends BaseController
         }
         return $this->error('Something went wrong','Something went wrong');
     }
+    
+    // CHECK DEVICE TOKEN EXISTS OR NOT
+
+    public function checkDeviceToken(Request $request){
+        try{
+            $validateData = Validator::make($request->all(), [
+                'device_token' => 'required',
+            ]);
+
+            if ($validateData->fails()) {
+                return $this->error($validateData->errors(),'Validation error',403);
+            } 
+                
+            $key  = $request->device_token;
+            
+            $data['is_device_token'] = 0;
+            if (User::where('fcm_token', '=', $key)->count() > 0) {
+                $data['is_device_token'] = 1;
+            }
+            return $this->success($data,'Device token exists check');
+
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
 }
