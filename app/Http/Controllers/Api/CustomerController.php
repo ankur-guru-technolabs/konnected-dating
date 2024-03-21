@@ -1976,6 +1976,7 @@ class CustomerController extends BaseController
     public function logout(){
         try{
             if (Auth::user()) {
+                User::where('id',Auth::id())->update(['device_token' => User::find(Auth::id())->value('fcm_token')]);
                 User::where('id',Auth::id())->update(['fcm_token' => null]);
                 $user = Auth::user()->token();
                 $user->revoke();
