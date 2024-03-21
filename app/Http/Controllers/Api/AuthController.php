@@ -536,8 +536,12 @@ class AuthController extends BaseController
             $key  = $request->device_token;
             
             $data['is_device_token'] = 0;
+            $data['is_from_google'] = false;
+            $data['is_from_facebook'] = false;
             if (User::where('fcm_token', '=', $key)->count() > 0) {
                 $data['is_device_token'] = 1;
+                $data['is_from_google'] = User::where('fcm_token', '=', $key)->whereNotNull('google_id')->count() > 0 ? true : false;
+                $data['is_from_facebook'] = User::where('fcm_token', '=', $key)->whereNotNull('facebook_id')->count() > 0 ? true : false;
             }
             return $this->success($data,'Device token exists check');
 
