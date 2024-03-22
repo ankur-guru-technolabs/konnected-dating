@@ -548,8 +548,6 @@ class AuthController extends BaseController
                     $query->where('fcm_token', '=', $key)
                         ->orWhere('device_token', '=', $key);
                 })->whereNotNull('facebook_id')->count() > 0 ? true : false;
-                
-                $data['is_from_facebook'] = User::where('fcm_token', '=', $key)->whereNotNull('facebook_id')->count() > 0 ? true : false;
             }
             return $this->success($data,'Device token exists check');
 
