@@ -37,6 +37,7 @@ use App\Models\UserQuestion;
 use App\Models\UserReviewLater;
 use App\Models\UserView;
 use App\Models\UserReport;
+use App\Models\UserSubscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use DateTime;
@@ -47,7 +48,6 @@ use DB;
 use Laravel\Ui\Presets\React;
 use App\Lib\RtcTokenBuilder;
 use App\Services\GooglePlayService;
-use App\Models\UserSubscription;
 use Carbon\Carbon;
 
 use GuzzleHttp\Client;
@@ -1966,6 +1966,52 @@ class CustomerController extends BaseController
                                     ->value('total_balance') ?? 0;
                                     
             return $this->success($data,'Gift data');
+        }catch(Exception $e){
+            return $this->error($e->getMessage(),'Exception occur');
+        }
+        return $this->error('Something went wrong','Something went wrong');
+    }
+
+    // USER DELETE ACCOUNT
+    public function deleteAccount(){
+        try{
+            if (Auth::user()) {
+                $user_data = Auth::user();
+                $user = Auth::user()->token();
+                $user->revoke();
+
+                $userPhotos = UserPhoto::where('user_id',$request->user_id);
+                $user_old_photo_name = $userPhotos->pluck('name')->toArray();
+                
+                $deletedFiles = [];
+                if(!empty($user_old_photo_name)){
+                    foreach ($user_old_photo_name as $name) {
+                        $path = public_path('user_profile/' . $name);
+                        if (File::exists($path)) {
+                            if (!is_writable($path)) {
+                                chmod($path, 0777);
+                            }
+                            File::delete($path);
+                            $deletedFiles[] = $path;
+                        }
+                    };
+                }
+                $userPhotos->delete();
+                
+                Chat::where('sender_id',$user_data->id)->orWhere('receiver_id',$user_data->id)->delete();
+                Notification::where('sender_id',$user_data->id)->orWhere('receiver_id',$user_data->id)->delete();
+                UserIceBreaker::where('user_id',$user_data->id)->delete();
+                UserLikes::where('like_from',$user_data->id)->orWhere('like_to',$user_data->id)->delete();
+                UserPhoto::where('user_id',$user_data->id)->delete();
+                UserQuestion::where('user_id',$user_data->id)->delete();
+                UserReport::where('reporter_id',$user_data->id)->delete();
+                UserReviewLater::where('user_review_from',$user_data->id)->delete();
+                UserSubscription::where('user_id',$user_data->id)->delete();
+                UserView::where('view_from',$user_data->id)->delete();
+                User::where('id',$user_data->id)->delete();
+                return $this->success([],'Account delete successfully');
+            }
+            return $this->error('Something went wrong','Something went wrong');
         }catch(Exception $e){
             return $this->error($e->getMessage(),'Exception occur');
         }

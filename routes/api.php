@@ -38,6 +38,7 @@ Route::get('authorized/{provider}/callback', [AuthController::class, 'handleProv
 
 Route::post('check-social-user', [AuthController::class,'checkSocailUser'])->name('check-social-login');
 Route::post('upload-user-media', [CustomerController::class,'uploadUserMedia'])->name('upload-user-media');
+Route::get('get-static-page', [CustomerController::class,'staticPage'])->name('get-static-page');
 
 Route::middleware('auth:api')->group(function () {
     Route::get('get-user-profile/{id?}', [CustomerController::class,'getProfile'])->name('get-user-profile');
@@ -57,7 +58,6 @@ Route::middleware('auth:api')->group(function () {
     Route::get('get-undo-profile-data', [CustomerController::class,'undoProfile'])->name('undo-Profile');
     Route::get('who-viewed-me', [CustomerController::class,'whoViewedMe'])->name('who-viewed-me');
     Route::get('who-likes-me', [CustomerController::class,'whoLikesMe'])->name('who-likes-me');
-    Route::get('get-static-page', [CustomerController::class,'staticPage'])->name('get-static-page');
     Route::get('get-category-list', [CustomerController::class,'categoryList'])->name('get-category-list');
     Route::get('get-faq-list/{id}', [CustomerController::class,'faqList'])->name('get-faq-list');
     Route::get('review-later-list', [CustomerController::class,'reviewLaterList'])->name('review-later-list');
@@ -78,6 +78,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('coin-purchase', [CustomerController::class,'coinPurchase'])->name('coin-purchase');
     Route::get('wallet-history', [CustomerController::class,'walletHistory'])->name('wallet-history');
     Route::get('get-gift-list', [CustomerController::class,'giftList'])->name('get-gift-list');
+    Route::get('delete-account', [CustomerController::class,'deleteAccount'])->name('delete-account');
     Route::get('log-out', [CustomerController::class,'logout'])->name('log-out');
  
 });
