@@ -1980,7 +1980,7 @@ class CustomerController extends BaseController
                 $user = Auth::user()->token();
                 $user->revoke();
 
-                $userPhotos = UserPhoto::where('user_id',$request->user_id);
+                $userPhotos = UserPhoto::where('user_id',$user_data);
                 $user_old_photo_name = $userPhotos->pluck('name')->toArray();
                 
                 $deletedFiles = [];
