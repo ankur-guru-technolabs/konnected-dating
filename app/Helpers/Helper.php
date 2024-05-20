@@ -127,7 +127,7 @@ class Helper {
     public static function send_notification_by_admin($title = '',  $message = '', $custom = [])
     {
         // Fetch all users in chunks
-        User::chunk(1000, function ($users) use ($title, $custom) {
+        User::chunk(1000, function ($users) use ($title, $message,$custom) {
             $accesstoken = env('FCM_KEY');
             $image = isset($custom['image']) ? $custom['image'] : asset('images/meet-now.png');
 
