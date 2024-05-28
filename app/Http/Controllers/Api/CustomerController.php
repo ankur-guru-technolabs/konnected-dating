@@ -715,7 +715,10 @@ class CustomerController extends BaseController
                             })->leftJoin('user_review_laters as ur1', function ($join) {
                                 $join->on('users.id', '=', 'ur1.user_review_to')
                                      ->where('ur1.user_review_from', '=', Auth::id());
-                            })->whereNull('ul1.id')->whereNull('ul2.id')->whereNull('ur1.id');
+                            })->leftJoin('user_reports as ur2', function ($join) {
+                                $join->on('users.id', '=', 'ur2.reported_user_id')
+                                     ->where('ur2.reporter_id', '=', Auth::id());
+                            })->whereNull('ul1.id')->whereNull('ul2.id')->whereNull('ur1.id')->whereNull('ur2.id');
                             
             // $user_list = $query->select('users.id', 'first_name', 'last_name', 'location', 'job', 'age','live_latitude','live_longitude')
             $user_list  = $query->select(\DB::raw("users.id,first_name,last_name,location,job,age,latitude,longitude,(3959 * 
@@ -1012,7 +1015,7 @@ class CustomerController extends BaseController
     public function report(Request $request){
         try{
             $validateData = Validator::make($request->all(), [
-                'match_id' => 'required',
+                // 'match_id' => 'required',
                 'message' => 'required',
             ]);
 
@@ -1023,7 +1026,7 @@ class CustomerController extends BaseController
             UserLikes::where('user_likes.match_id',$request->match_id)->update(['user_likes.match_status' => 0]);
 
             $user_report = new UserReport();
-            $user_report->match_id          = $request->match_id;
+            $user_report->match_id          = $request->match_id ?? null;
             $user_report->reporter_id       = Auth::id();
             $user_report->reported_user_id  = $request->reported_user_id;
             $user_report->message           = $request->message;
