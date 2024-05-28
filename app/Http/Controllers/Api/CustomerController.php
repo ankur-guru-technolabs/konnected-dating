@@ -718,7 +718,10 @@ class CustomerController extends BaseController
                             })->leftJoin('user_reports as ur2', function ($join) {
                                 $join->on('users.id', '=', 'ur2.reported_user_id')
                                      ->where('ur2.reporter_id', '=', Auth::id());
-                            })->whereNull('ul1.id')->whereNull('ul2.id')->whereNull('ur1.id')->whereNull('ur2.id');
+                            })->leftJoin('user_reports as ur3', function ($join) {
+                                $join->on('users.id', '=', 'ur3.reporter_id')
+                                     ->where('ur3.reported_user_id', '=', Auth::id());
+                            })->whereNull('ul1.id')->whereNull('ul2.id')->whereNull('ur1.id')->whereNull('ur2.id')->whereNull('ur3.id');
                             
             // $user_list = $query->select('users.id', 'first_name', 'last_name', 'location', 'job', 'age','live_latitude','live_longitude')
             $user_list  = $query->select(\DB::raw("users.id,first_name,last_name,location,job,age,latitude,longitude,(3959 * 
