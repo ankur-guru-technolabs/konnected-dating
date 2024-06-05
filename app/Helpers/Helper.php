@@ -42,6 +42,20 @@ class Helper {
 
     }
 
+    public static function sendOtp($number,$otp)
+    {
+        if ($number == '') {
+            return false;
+        }
+        $account_sid = env('TWILIO_SID', 'ACadfb118f338e01fbf732eaeb557d48d4');
+        $auth_token = env('TWILIO_AUTH_TOKEN', '51361ee3094a75cd2bb6d43b71530e6a');
+        $twilio_number = env('TWILIO_NUMBER', '+18557854022');
+        $message = "Your konnected otp is ". $otp;
+        $client = new Client($account_sid, $auth_token);
+        $client->messages->create($number,['from' => $twilio_number, 'body' => $message] );
+        return true;
+    }
+
     public static function send_notification($notification_id, $sender_id = '', $receiver_id = '', $title = '', $type = '', $message = '', $custom = [])
     {
         $receiver_data = User::where('id', $receiver_id)->first();
