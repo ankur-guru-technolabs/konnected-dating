@@ -48,9 +48,9 @@ class Helper {
         if ($number == '') {
             return false;
         }
-        $account_sid = env('TWILIO_SID', 'ACadfb118f338e01fbf732eaeb557d48d4');
-        $auth_token = env('TWILIO_AUTH_TOKEN', '51361ee3094a75cd2bb6d43b71530e6a');
-        $twilio_number = env('TWILIO_NUMBER', '+18557854022');
+        $account_sid = env('TWILIO_SID', 'AC5ba9320b675dc1701dd32ef717784cb6');
+        $auth_token = env('TWILIO_AUTH_TOKEN', 'a41aa401c8171e2cce1763e921dce992');
+        $twilio_number = env('TWILIO_NUMBER', '+18667904843');
         $message = "Your konnected otp is ". $otp;
         $client = new Client($account_sid, $auth_token);
         $client->messages->create($number,['from' => $twilio_number, 'body' => $message] );
