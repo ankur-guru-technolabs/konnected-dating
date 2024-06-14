@@ -49,7 +49,7 @@ class Helper {
             return false;
         }
         $account_sid = env('TWILIO_SID', 'AC5ba9320b675dc1701dd32ef717784cb6');
-        $auth_token = env('TWILIO_AUTH_TOKEN', 'a41aa401c8171e2cce1763e921dce992');
+        $auth_token = env('TWILIO_AUTH_TOKEN', '48b6d7d9ad34b2ebb9d55e846812e6b5');
         $twilio_number = env('TWILIO_NUMBER', '+18667904843');
         $message = "Your konnected otp is ". $otp;
         $client = new Client($account_sid, $auth_token);
