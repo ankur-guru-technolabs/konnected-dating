@@ -31,7 +31,7 @@ return new class extends Migration
             $table->string('education');
             $table->string('industry');
             $table->string('salary');
-            $table->string('body_type');
+            $table->string('body_type')->nullable();
             $table->string('children');
             $table->string('lastseen')->nullable();
             $table->string('user_type');

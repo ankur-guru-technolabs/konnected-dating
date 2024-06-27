@@ -292,7 +292,7 @@ class CustomerController extends BaseController
                 'education'  => 'required',
                 'industry'   => 'required',
                 'salary'     => 'required',
-                'body_type'  => 'required',
+                // 'body_type'  => 'required',
                 'children'   => 'required',
                 'faith'      => 'required',
                 'ethnticity' => 'required',
