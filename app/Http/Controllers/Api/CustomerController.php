@@ -2010,10 +2010,10 @@ class CustomerController extends BaseController
                 UserLikes::where('like_from',$user_data->id)->orWhere('like_to',$user_data->id)->delete();
                 UserPhoto::where('user_id',$user_data->id)->delete();
                 UserQuestion::where('user_id',$user_data->id)->delete();
-                UserReport::where('reporter_id',$user_data->id)->delete();
-                UserReviewLater::where('user_review_from',$user_data->id)->delete();
+                UserReport::where('reporter_id',$user_data->id)->orWhere('reported_user_id',$user_data->id)->delete();
+                UserReviewLater::where('user_review_from',$user_data->id)->orWhere('user_review_to',$user_data->id)->delete();
                 UserSubscription::where('user_id',$user_data->id)->delete();
-                UserView::where('view_from',$user_data->id)->delete();
+                UserView::where('view_from',$user_data->id)->orWhere('view_to',$user_data->id)->delete();
                 User::where('id',$user_data->id)->delete();
                 return $this->success([],'Account delete successfully');
             }
