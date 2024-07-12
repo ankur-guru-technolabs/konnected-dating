@@ -19,7 +19,7 @@ class AdminSeeder extends Seeder
         $admin = User::create([
             'first_name' => 'Admin',
             'last_name' => 'User',
-            'email' => 'admin@gmail.com',
+            'email' => 'admin@konnected.com',
             'phone_no' => '+911234567890',
             'location' => 'Raiya Road Rajkot',
             'latitude' => '22.298340',
@@ -41,7 +41,7 @@ class AdminSeeder extends Seeder
             'faith'=> '3,9',
             'ethnticity'=> 1,
             'hobbies'=> 2,
-            'password' => bcrypt('123456'),
+            'password' => bcrypt('Konnected123**&'),
             'user_type' =>'admin',
         ]);
     }
