@@ -56,7 +56,7 @@ class Helper {
         $client = new Client($account_sid, $auth_token);
         $client->messages->create($number,['from' => $twilio_number, 'body' => $message] );
 
-        $otpRecord = OtpCount::where('phone_number', $number)->first();
+        $otpRecord = OtpCount::where('phone_number', $number)->where('date', date('Y-m-d'))->first();
 
         if ($otpRecord) {
             $otpRecord->update([

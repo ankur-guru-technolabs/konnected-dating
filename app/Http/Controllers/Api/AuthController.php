@@ -94,7 +94,7 @@ class AuthController extends BaseController
                 }
                 if(!in_array($request->phone_no,$temp_number)){
                     $otpRecord = OtpCount::where('phone_number', $request->phone_no)->where('date', date('Y-m-d'))->first();
-                    if (!empty($otpRecord) || $otpRecord->count == 3) {
+                    if (!empty($otpRecord) && $otpRecord->count == 3) {
                         return $this->error('You have reached maximum limit of otp','You have reached maximum limit of otp');
                     }
                     Helper::sendOtp($key,$otp);
